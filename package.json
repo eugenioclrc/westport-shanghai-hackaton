@@ -1,0 +1,36 @@
+{
+  "name": "westport-ai",
+  "version": "0.1.0",
+  "description": "WestPort.ai — AI compliance navigator for Chinese hardware entering EU markets",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.1.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "node backend/index.js",
+    "start": "node backend/index.js",
+    "seed": "node backend/seed.js",
+    "corpus:build": "node backend/scripts/build-corpus.js",
+    "test": "node --test backend/tests/*.test.js",
+    "audit": "pnpm audit --audit-level=moderate"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.32.1",
+    "better-sqlite3": "11.7.0",
+    "cors": "2.8.5",
+    "express": "5.0.1",
+    "express-rate-limit": "7.2.0",
+    "jsonwebtoken": "9.0.2",
+    "node-fetch": "3.3.2",
+    "uuid": "9.0.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "7.6.12",
+    "@types/express": "4.17.21",
+    "@types/jsonwebtoken": "9.0.5",
+    "@types/node": "20.11.5"
+  }
+}

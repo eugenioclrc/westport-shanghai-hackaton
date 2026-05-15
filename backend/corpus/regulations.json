@@ -1,0 +1,94 @@
+{
+  "regulations": {
+    "rohs_2011_65": {
+      "title": "Directive 2011/65/EU (RoHS) — Restriction of Hazardous Substances in EEE",
+      "url": "https://eur-lex.europa.eu/eli/dir/2011/65/oj/eng",
+      "chunks": [
+        { "id": "annex_ii_substances", "text": "Annex II lists 10 restricted substances with maximum concentration values tolerated by weight in homogeneous materials: lead (0.1%), mercury (0.1%), cadmium (0.01%), hexavalent chromium (0.1%), PBB (0.1%), PBDE (0.1%), DEHP (0.1%), BBP (0.1%), DBP (0.1%), DIBP (0.1%)." },
+        { "id": "art_7_obligations", "text": "Article 7: manufacturers must ensure EEE is designed and manufactured in accordance with Annex II requirements; draw up the EU declaration of conformity; affix CE marking; retain the technical documentation for 10 years; obtain a full material declaration (FMD) from suppliers or commission XRF/wet-chemistry tests in an ISO 17025 lab." },
+        { "id": "art_12_ce_declaration", "text": "Article 12: drawing up the EU declaration of conformity is the manufacturer's responsibility. The declaration must reference the harmonised standards used (typically EN IEC 63000) and be available in a language understood by the Member State surveillance authority." }
+      ]
+    },
+    "reach_1907_2006": {
+      "title": "Regulation (EC) 1907/2006 (REACH)",
+      "url": "https://eur-lex.europa.eu/eli/reg/2006/1907",
+      "chunks": [
+        { "id": "art_33_svhc", "text": "Article 33: any article supplier must provide, on request and within 45 days, sufficient information to allow safe use of the article whenever it contains a Substance of Very High Concern (SVHC) above 0.1% wt/wt. The SVHC Candidate List is updated twice a year by ECHA and currently contains 240+ substances." },
+        { "id": "scip_notification", "text": "Since 5 Jan 2021, suppliers of articles containing SVHC > 0.1% must notify ECHA via the SCIP database before placing the article on the EU market. The notification includes article identifiers, substance identification, concentration range, and safe-use instructions." },
+        { "id": "annex_xiv_authorisation", "text": "Annex XIV lists SVHCs subject to authorisation: use within the EU requires explicit authorisation from the European Commission. Articles containing Annex XIV substances cannot be imported into the EU once the sunset date has passed unless the substance is authorised." }
+      ]
+    },
+    "battery_2023_1542_substances": {
+      "title": "Regulation (EU) 2023/1542 (Batteries) — Hazardous-Substances chapter",
+      "url": "https://eur-lex.europa.eu/eli/reg/2023/1542/oj/eng",
+      "chunks": [
+        { "id": "art_6_substance_restrictions", "text": "Article 6 + Annex I: from 18 August 2024, no battery — irrespective of type — may contain more than 0.0005% mercury, 0.002% cadmium, or 0.01% lead by weight. Some narrow derogations apply (portable button cells, lead-acid starter batteries). Restrictions are tightened by delegated acts on a rolling basis." }
+      ]
+    },
+    "lvd_2014_35": {
+      "title": "Directive 2014/35/EU (Low Voltage Directive)",
+      "url": "https://eur-lex.europa.eu/eli/dir/2014/35/oj/eng",
+      "chunks": [
+        { "id": "scope_50_1000v", "text": "Applies to electrical equipment with rated voltage 50–1000 V AC or 75–1500 V DC. Battery packs operating in these ranges, EV chargers, inverters and industrial robot control units fall in-scope." },
+        { "id": "essential_safety", "text": "Annex I lists essential safety objectives: protection against direct/indirect contact, temperature rise, leakage current, dielectric strength, insulation, mechanical hazards. Compliance is presumed when relevant harmonised EN standards are applied (e.g. EN IEC 62368-1, EN IEC 62133-2)." },
+        { "id": "module_a_self_decl", "text": "Conformity is assessed via Module A (internal production control). The manufacturer draws up the technical file and issues the EU Declaration of Conformity; no notified body is mandatory unless an Annex IV product." }
+      ]
+    },
+    "emc_2014_30": {
+      "title": "Directive 2014/30/EU (EMC)",
+      "url": "https://eur-lex.europa.eu/eli/dir/2014/30/oj/eng",
+      "chunks": [
+        { "id": "essential_requirements", "text": "Equipment must be designed so that (a) the electromagnetic disturbance it generates does not exceed the level allowing radio + telecommunications equipment to operate as intended; (b) it has a level of immunity to electromagnetic disturbance allowing it to operate without unacceptable degradation. Tests typically use EN 55032 (emission) and EN 55035 (immunity) for multimedia equipment, or EN 61000-6 series for generic environments." },
+        { "id": "ce_module_self", "text": "Most EMC products use Module A — internal production control + self-declaration with test report. The notified body route (Module B+C) is mandatory only for highly disturbance-prone equipment such as high-power transmitters." }
+      ]
+    },
+    "red_2014_53": {
+      "title": "Directive 2014/53/EU (Radio Equipment Directive)",
+      "url": "https://eur-lex.europa.eu/eli/dir/2014/53/oj/eng",
+      "chunks": [
+        { "id": "scope", "text": "Applies to any product that intentionally emits or receives radio waves: Wi-Fi, BLE, LTE/5G modems, NFC, UWB, Zigbee, sub-GHz LPWAN, GPS receivers. EV battery packs with wireless BMS modules and humanoid robots with onboard Wi-Fi/5G are in-scope." },
+        { "id": "art_3_essential", "text": "Article 3 essential requirements: (a) protection of health and safety, (b) EMC, (c) efficient use of the radio spectrum + interoperability + protection of network functioning. Demonstrated through harmonised standards (EN 300 328, EN 300 440, EN 301 893 etc.) and notified body Module B for non-standard radio designs." }
+      ]
+    },
+    "machinery_2023_1230": {
+      "title": "Regulation (EU) 2023/1230 (Machinery Regulation)",
+      "url": "https://eur-lex.europa.eu/eli/reg/2023/1230/oj/eng",
+      "chunks": [
+        { "id": "scope_humanoid", "text": "Replaces Machinery Directive 2006/42/EC, applies from 20 January 2027. Humanoid and industrial robots fall in scope as 'partly completed machinery' or 'machinery' depending on integration. New: Annex I.1.1.6 explicitly addresses safety of 'machinery embedding artificial intelligence systems' — risk assessment must consider learning behaviour and reasonably foreseeable misuse." },
+        { "id": "ai_safety_components", "text": "AI safety components used in robots are listed in Annex I, Part A (high-risk). These require a notified-body conformity assessment (Module B + C2 / Module H1). Self-declaration is not permitted for AI safety components." }
+      ]
+    },
+    "ai_act_2024_1689": {
+      "title": "Regulation (EU) 2024/1689 (AI Act)",
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng",
+      "chunks": [
+        { "id": "high_risk_annex_iii", "text": "Annex III lists high-risk AI systems. Humanoid robots used in critical infrastructure, employment screening, law enforcement or safety components of regulated products are in-scope. Obligations include risk management, data governance, human oversight, accuracy + robustness + cybersecurity, registration in the EU database." }
+      ]
+    },
+    "battery_2023_1542_carbon": {
+      "title": "Regulation (EU) 2023/1542 (Batteries) — Carbon + DPP + due diligence",
+      "url": "https://eur-lex.europa.eu/eli/reg/2023/1542/oj/eng",
+      "chunks": [
+        { "id": "art_7_carbon_footprint", "text": "Article 7: from 18 Feb 2025 EV batteries, from 18 Aug 2026 industrial/LMT batteries: each model must declare carbon footprint per functional unit (kWh of total energy provided over lifetime). Computed cradle-to-gate using the Product Environmental Footprint (PEF) methodology + product category rules. Performance classes are added by delegated act." },
+        { "id": "art_8_recycled_content", "text": "Article 8: from 18 Aug 2028 (industrial/EV) batteries containing cobalt, lead, lithium or nickel must declare recycled content. Minimum thresholds apply from 2031 (16% Co, 6% Li, 6% Ni, 85% Pb) and tighten in 2036. Documentation is required at placement on market." },
+        { "id": "art_48_due_diligence", "text": "Article 48: economic operators placing batteries on the EU market with annual turnover >€40M must implement a battery-due-diligence policy covering cobalt, natural graphite, lithium, nickel and certain chemical compounds, aligned with OECD Due Diligence Guidance. Third-party verification by a notified body." },
+        { "id": "art_77_dpp", "text": "Article 77 + Annex XIII: each LMT, industrial > 2 kWh, and EV battery must carry a Digital Product Passport accessible via QR code. The passport stores 32+ mandatory fields including substance composition, recycled content, carbon footprint, supply chain due diligence statement, performance + durability data, repair/dismantling info." }
+      ]
+    },
+    "cbam_2023_956": {
+      "title": "Regulation (EU) 2023/956 (Carbon Border Adjustment Mechanism)",
+      "url": "https://eur-lex.europa.eu/eli/reg/2023/956/oj/eng",
+      "chunks": [
+        { "id": "scope_iron_alu_etc", "text": "Initial scope (in force Oct 2023, financial obligations from 2026): cement, iron + steel, aluminium, fertilisers, electricity, hydrogen. Embedded emissions in imports must be declared quarterly. Battery cells and finished vehicles are NOT yet in scope but precursor aluminium casings and steel components ARE." },
+        { "id": "art_5_declarant", "text": "Article 5 + 22: only an 'authorised CBAM declarant' (EU-resident person, with EORI + EU CBAM authorisation) may import CBAM goods into the EU after 2026. The declarant must report embedded emissions, retire CBAM certificates equal to the embedded carbon, and verify with an accredited verifier." }
+      ]
+    },
+    "weee_2012_19": {
+      "title": "Directive 2012/19/EU (WEEE)",
+      "url": "https://eur-lex.europa.eu/eli/dir/2012/19/oj/eng",
+      "chunks": [
+        { "id": "producer_obligation", "text": "Producers (including the first non-EU exporter via an Authorised Representative in each Member State) must (a) register with the national WEEE register, (b) finance the collection + treatment of waste, (c) mark products with the crossed-out wheeled bin symbol, and (d) report annual EEE put on the market." }
+      ]
+    }
+  }
+}

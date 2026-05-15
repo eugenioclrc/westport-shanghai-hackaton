@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>WestPort.ai — EU compliance for Chinese hardware, in 90 seconds</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg:        #0B0C0F;
+    --bg-soft:   #101218;
+    --surface:   #16181D;
+    --surface-2: #1C1F26;
+    --surface-3: #232732;
+    --border:    rgba(255,255,255,0.06);
+    --border-strong: rgba(255,255,255,0.10);
+    --text:      #F2F1EE;
+    --muted:     rgba(242,241,238,0.58);
+    --faint:     rgba(242,241,238,0.36);
+    --hairline:  rgba(242,241,238,0.18);
+    --accent:      #2EC4B6;
+    --accent-dim:  #1F8B82;
+    --warm:        #FFC371;
+    --info:        #84B5FF;
+    --danger:      #FF8585;
+    --gold:        #F2D38B;
+    --high:        #FF8585;
+    --medium:      #FFC371;
+    --low:         #84B5FF;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    background:
+      radial-gradient(1200px 800px at 20% -10%, #0F1820 0%, #0B0C0F 60%),
+      #0B0C0F;
+    min-height: 100vh;
+    font-family: 'Geist', -apple-system, system-ui, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  * { box-sizing: border-box; }
+  button, input, textarea, select { font-family: inherit; }
+  .num  { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+  .mono { font-family: 'Geist Mono', ui-monospace, monospace; }
+  .serif{ font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .scroll { scrollbar-width: none; }
+  #loading {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <div id="loading">Compiling WestPort.ai…</div>
+
+  <script type="module">
+    import { compile } from 'https://esm.sh/svelte@4.2.19/compiler.mjs';
+    const internal = await import('https://esm.sh/svelte@4.2.19/internal?bundle');
+    const store    = await import('https://esm.sh/svelte@4.2.19/store?bundle');
+    window.__sv = { internal, store };
+
+    const files = [
+      'src/lib/api.js',
+      'src/lib/store.js',
+      'src/lib/sse.js',
+      'src/lib/Icon.svelte',
+      'src/lib/Sparkline.svelte',
+      'src/lib/StatTile.svelte',
+      'src/lib/ProgressRing.svelte',
+      'src/lib/SeverityPill.svelte',
+      'src/lib/AgentStreamCard.svelte',
+      'src/screens/Landing.svelte',
+      'src/screens/NewAnalysis.svelte',
+      'src/screens/Running.svelte',
+      'src/screens/Report.svelte',
+      'src/screens/History.svelte',
+      'src/App.svelte',
+    ];
+
+    const sources = {};
+    await Promise.all(files.map(async f => {
+      const r = await fetch(f);
+      if (!r.ok) throw new Error(`Could not fetch ${f}: ${r.status}`);
+      sources[f] = await r.text();
+    }));
+
+    const blobs = {};
+    function resolveRel(fromFile, relPath) {
+      const base = new URL(fromFile, location.href);
+      const target = new URL(relPath, base);
+      const here = location.pathname.replace(/[^/]+$/, '');
+      const targetPath = target.pathname.replace(here, '').replace(/^\/+/, '');
+      if (blobs[targetPath]) return blobs[targetPath];
+      const found = Object.keys(blobs).find(k => k.endsWith(targetPath) || targetPath.endsWith(k));
+      return found ? blobs[found] : null;
+    }
+    function rewriteImports(code, fromFile) {
+      code = code.replace(/import\s+['"]svelte\/internal\/disclose-version['"]\s*;?/g, '');
+      code = code.replace(/import\s*\{([\s\S]*?)\}\s*from\s*['"]svelte\/internal['"]\s*;?/g, (_m, names) => `const {${names}} = window.__sv.internal;`);
+      code = code.replace(/import\s*\{([\s\S]*?)\}\s*from\s*['"]svelte\/store['"]\s*;?/g, (_m, names) => `const {${names}} = window.__sv.store;`);
+      code = code.replace(/import\s*\{([\s\S]*?)\}\s*from\s*['"]svelte['"]\s*;?/g, (_m, names) => `const {${names}} = window.__sv.internal;`);
+      code = code.replace(/import\s+(\w+)\s+from\s*['"]svelte['"]\s*;?/g, '// (svelte default import stripped)');
+      code = code.replace(/from\s+['"]([^'"]+)['"]/g, (m, p) => {
+        if (p.startsWith('.')) {
+          const url = resolveRel(fromFile, p);
+          if (url) return `from '${url}'`;
+          return m;
+        }
+        return m;
+      });
+      return code;
+    }
+
+    for (const file of files) {
+      let code;
+      if (file.endsWith('.svelte')) {
+        const name = file.split('/').pop().replace('.svelte', '');
+        const out = compile(sources[file], { generate: 'dom', dev: false, name, filename: file });
+        code = out.js.code;
+      } else {
+        code = sources[file];
+      }
+      code = rewriteImports(code, file);
+      const blob = new Blob([code], { type: 'application/javascript' });
+      blobs[file] = URL.createObjectURL(blob);
+    }
+
+    const App = (await import(blobs['src/App.svelte'])).default;
+    document.getElementById('loading').remove();
+    new App({ target: document.getElementById('root') });
+  </script>
+</body>
+</html>
