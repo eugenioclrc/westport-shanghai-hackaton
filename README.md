@@ -1,9 +1,9 @@
 # WestPort.ai
 
 > AI-powered EU compliance for Chinese hardware startups. Drop in your product
-> spec → three specialist agents read EU regulations in parallel → get a
+> spec -> three specialist agents read EU regulations in parallel -> get a
 > prioritized compliance roadmap with cost estimate, timeline, and
-> notified-body shortlist in ~30 seconds.
+> notified-body shortlist in about 90 seconds.
 
 Built for the **Shanghai International Hackathon 2026** (May 16, 1:00 PM
 deadline).
@@ -11,31 +11,31 @@ deadline).
 ## What it does
 
 Chinese NEV / battery / robotics / solar startups are expanding into Europe
-faster than ever — China's total outbound direct investment was **$174.4B in
+faster than ever - China's total outbound direct investment was **$174.4B in
 2025**, with deal value in Europe at **$13.8B**. The catch: every EV battery
 cell needs CE, RoHS, REACH, the EU Battery Regulation 2023/1542 (Digital
 Product Passport + carbon footprint + due diligence + recyclate %), CBAM,
-the Machinery Regulation, WEEE… 600+ pages of English-legal regulation that
-takes a €25k–100k EU consultant quarter to navigate.
+the Machinery Regulation, WEEE... 600+ pages of English-legal regulation that
+takes a €25k-100k EU consultant quarter to navigate.
 
-WestPort.ai compresses that into a **~30-second AI run that costs ~$0.20 in
+WestPort.ai compresses that into **about a 90-second AI run that costs ~$0.20 in
 tokens**:
 
 1. **Drop in a product spec** (materials, electrical specs, battery details,
    target country).
-2. **Three specialist Claude Haiku 4.5 agents read in parallel** — Chemicals
+2. **Three specialist Claude Haiku 4.5 agents read in parallel** - Chemicals
    (RoHS, REACH, Battery Reg substances), Electrical (CE, LVD, EMC, RED,
    Machinery, AI Act), Carbon (Battery Reg 2023/1542, CBAM, WEEE).
 3. **A Claude Sonnet 4.6 orchestrator** merges the three reports, dedupes
-   findings, scores compliance 0–100, prioritizes the top 8–10 actions, and
-   shortlists EU notified bodies (TÜV SÜD, DEKRA, Bureau Veritas, SGS…).
-4. **The Svelte H5 UI streams progress** via Server-Sent Events and renders a
+   findings, scores compliance 0-100, prioritizes the top 8-10 actions, and
+   shortlists EU notified bodies (TÜV SÜD, DEKRA, Bureau Veritas, SGS...).
+4. **The Svelte web UI streams progress** via Server-Sent Events and renders a
    board-ready PDF-style roadmap.
 
 ## ICP
 
-- **Customer:** Chinese hardware startups, Seed–Series B, $500K–$50M ARR,
-  10–500 employees.
+- **Customer:** Chinese hardware startups, Seed-Series B, $500K-$50M ARR,
+  10-500 employees.
 - **Target market:** EU first; US/Canada/UK on the roadmap.
 - **Buyer:** VP International, Compliance Officer, founder.
 - **Wedge sector:** EV battery cell + pack (highest M&A activity, 2026).
@@ -45,10 +45,10 @@ tokens**:
 | Layer | Tech |
 | --- | --- |
 | Backend | Node 20+ / Express 5 / better-sqlite3 11 / JWT |
-| AI | `@anthropic-ai/sdk` 0.32.1 — Haiku 4.5 (agents) + Sonnet 4.6 (orchestrator) |
+| AI | `@anthropic-ai/sdk` 0.32.1 - Haiku 4.5 (agents) + Sonnet 4.6 (orchestrator) |
 | Streaming | Server-Sent Events (`text/event-stream`) over Express |
 | RAG | Pre-baked JSON corpus of 24 hand-curated EU-regulation excerpts |
-| Frontend | Svelte 4 compiled in the browser (no build step) |
+| Frontend | Svelte + Vite, compiled to static assets served by Express |
 | Pkg mgr | pnpm 9.1.0 |
 
 39 source files. No Taro / mini-program build needed.
@@ -57,41 +57,49 @@ tokens**:
 
 ```bash
 pnpm install
+pnpm build
 pnpm seed
-pnpm start                  # API + H5 demo on :3000
+pnpm start                  # API + compiled web app on :3000
 # open http://localhost:3000/
 ```
 
-The demo works out of the box in **mock mode** — three agents return curated
+The demo works out of the box in **mock mode** - three agents return curated
 realistic JSON, no API key needed. To run real LLM inference, pick a provider:
 
 ```bash
-# Option A — DeepSeek (Hangzhou, default for Shanghai demos)
+# Option A - DeepSeek (Hangzhou, default for Shanghai demos)
 export DEEPSEEK_API_KEY=sk-...
 pnpm start
 
-# Option B — Qwen / Tongyi Qianwen via Alibaba DashScope
+# Option B - Qwen / Tongyi Qianwen via Alibaba DashScope
 export DASHSCOPE_API_KEY=sk-...        # also accepts QWEN_API_KEY
 pnpm start
 
-# Option C — OpenRouter Fusion (auto-router across 300+ models)
+# Option C - OpenRouter Fusion (auto-router across 300+ models)
 export OPENROUTER_API_KEY=sk-or-...
 pnpm start
 
-# Option D — Anthropic Claude Haiku 4.5 + Sonnet 4.6
+# Option D - Anthropic Claude Haiku 4.5 + Sonnet 4.6
 export ANTHROPIC_API_KEY=sk-ant-...
 pnpm start
 
+# Option E - Orbit Space API Relay (OpenAI-compatible)
+export ORBIT_API_KEY=sk-orbit-...
+pnpm start
+
 # Force a specific provider / model
-export LLM_PROVIDER=deepseek            # anthropic | openrouter | deepseek | qwen
+export LLM_PROVIDER=deepseek            # anthropic | openrouter | deepseek | qwen | orbit
 export LLM_MODEL_AGENT=deepseek-chat
 export LLM_MODEL_ORCHESTRATOR=deepseek-chat
+
+# Optional: override any OpenAI-compatible base URL
+export LLM_BASE_URL=https://api.orbitai.global/v1
 ```
 
-WestPort.ai is provider-agnostic. All four routes go through an
+WestPort.ai is provider-agnostic. The OpenAI-compatible providers go through an
 OpenAI-compatible `/chat/completions` call (Anthropic uses its SDK
 equivalent) with strict function-calling, so the same tool schema enforces
-deterministic JSON output everywhere — judges can run the demo on
+deterministic JSON output everywhere - judges can run the demo on
 **DeepSeek-Chat or Qwen-Max** without changing a line of agent code, and the
 status pill on the landing page shows the live provider.
 
@@ -116,27 +124,30 @@ westport-ai/
 │   ├── routes/                  auth, companies, products, analyses
 │   ├── corpus/regulations.json  24 hand-curated EU-regulation excerpts
 │   ├── scripts/build-corpus.js  Validates + normalises the corpus
-│   └── tests/                   node:test — agents / orchestrator / ragCorpus
-└── public/                      Svelte H5 SPA, compiled in browser
-    ├── index.html               In-browser Svelte loader (no build)
-    └── src/
-        ├── App.svelte           Screen router
-        ├── screens/
-        │   ├── Landing.svelte
-        │   ├── NewAnalysis.svelte
-        │   ├── Running.svelte
-        │   ├── Report.svelte
-        │   └── History.svelte
-        └── lib/
-            ├── api.js           fetch wrapper
-            ├── sse.js           EventSource wrapper
-            ├── store.js         Svelte writables
-            ├── Icon.svelte
-            ├── AgentStreamCard.svelte
-            ├── ProgressRing.svelte
-            ├── Sparkline.svelte
-            ├── SeverityPill.svelte
-            └── StatTile.svelte
+│   └── tests/                   node:test - agents / orchestrator / ragCorpus
+├── frontend/                    Vite + Svelte source app
+│   ├── index.html
+│   └── src/
+│       ├── App.svelte           Screen router
+│       ├── screens/
+│       │   ├── Landing.svelte
+│       │   ├── NewAnalysis.svelte
+│       │   ├── Running.svelte
+│       │   ├── Report.svelte
+│       │   └── History.svelte
+│       └── lib/
+│           ├── api.js           fetch wrapper
+│           ├── sse.js           EventSource wrapper
+│           ├── store.js         Svelte writables
+│           ├── Icon.svelte
+│           ├── AgentStreamCard.svelte
+│           ├── ProgressRing.svelte
+│           ├── Sparkline.svelte
+│           ├── SeverityPill.svelte
+│           └── StatTile.svelte
+└── public/                      Vite build output served by Express
+    ├── index.html
+    └── assets/
 ```
 
 ## API
@@ -151,13 +162,13 @@ westport-ai/
 | GET  | `/products/samples` | JWT | demo sample products |
 | POST | `/products` | JWT | upload a custom product spec |
 | POST | `/analyses` | JWT | start an analysis, return `analysisId` |
-| GET  | `/analyses/:id/stream?token=…` | query-token | SSE: `agent_start`, `agent_done`, `orchestrator_start`, `complete`, `failed` |
+| GET  | `/analyses/:id/stream?token=...` | query-token | SSE: `agent_start`, `agent_done`, `orchestrator_start`, `complete`, `failed` |
 | GET  | `/analyses` | JWT | history list |
 | GET  | `/analyses/:id` | JWT | full analysis with report |
 
 EventSource cannot set the `Authorization` header, so the stream endpoint
 accepts the same JWT as a query parameter. The token is short-lived and
-company-scoped — acceptable for a demo.
+company-scoped - acceptable for a demo.
 
 ## Agents
 
@@ -166,17 +177,17 @@ company-scoped — acceptable for a demo.
 | `chemicals`    | Haiku 4.5 | RoHS, REACH, Battery Reg Art. 6 | findings: substance flags, missing FMDs, SCIP notifications |
 | `electrical`   | Haiku 4.5 | LVD, EMC, RED, Machinery, AI Act | findings: CE module path, harmonised standards, EU test labs |
 | `carbon`       | Haiku 4.5 | Battery Reg 7+8+48+77, CBAM, WEEE | findings: PEF LCA, DPP fields, recyclate %, CBAM declarant |
-| `orchestrator` | Sonnet 4.6 | n/a — reads all 3 agent reports | score 0–100, top 8 actions, notified-body shortlist, summary |
+| `orchestrator` | Sonnet 4.6 | n/a - reads all 3 agent reports | score 0-100, top 8 actions, notified-body shortlist, summary |
 
 Each agent uses Anthropic's `tool_use` with a strict JSON schema so the
 output is deterministic. The findings always cite a specific article / annex
-from the regulation excerpts we injected into the system prompt — never
+from the regulation excerpts we injected into the system prompt - never
 hallucinated.
 
 ## EU regulation corpus
 
 `backend/corpus/regulations.json` is hand-curated, not vector-retrieved. Why:
-the agent → regulation mapping is fixed at three buckets, the corpus is small
+the agent -> regulation mapping is fixed at three buckets, the corpus is small
 (<1 MB), and a deliberate corpus is easier for judges to audit. To refresh
 the excerpts, edit the file by hand and run `pnpm corpus:build` (validates +
 normalises).
@@ -196,9 +207,9 @@ pnpm test
 
 9 tests passing:
 
-- `ragCorpus.test.js` — corpus loads, three buckets resolve to expected regs
-- `agents.test.js`   — each agent emits valid findings in mock mode
-- `orchestrator.test.js` — end-to-end mock run persists a complete report
+- `ragCorpus.test.js` - corpus loads, three buckets resolve to expected regs
+- `agents.test.js`   - each agent emits valid findings in mock mode
+- `orchestrator.test.js` - end-to-end mock run persists a complete report
 
 Tests use in-memory SQLite + `LLM_MOCK=1` so they run in <100 ms with no
 external dependencies.
@@ -207,9 +218,9 @@ external dependencies.
 
 | | WestPort.ai | EU compliance consultant |
 | --- | --- | --- |
-| Per-analysis cost | **€0.20** in tokens (Haiku + Sonnet, ~25k tokens) | €25,000–100,000 / quarter |
-| Time to roadmap | **~30 seconds** | 2–6 weeks |
-| Reproducibility | 100% (same spec → same roadmap) | depends on consultant |
+| Per-analysis cost | **€0.20** in tokens (Haiku + Sonnet, ~25k tokens) | €25,000-100,000 / quarter |
+| Time to roadmap | **about 90 seconds** | 2-6 weeks |
+| Reproducibility | 100% (same spec -> same roadmap) | depends on consultant |
 | Coverage | Always reads the latest excerpts in the corpus | depends on consultant |
 
 ## Roadmap
@@ -222,4 +233,4 @@ external dependencies.
 
 ## License
 
-Built for Shanghai International Hackathon 2026 — internal use only.
+Built for Shanghai International Hackathon 2026 - internal use only.

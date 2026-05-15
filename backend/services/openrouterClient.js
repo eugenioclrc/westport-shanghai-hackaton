@@ -1,9 +1,10 @@
 // FILE: backend/services/openrouterClient.js
 // Generic OpenAI-compatible /chat/completions client with function-calling.
 // Powers four providers that all speak the same wire format:
-//   - openrouter  → openrouter.ai/api/v1   (Fusion auto-router across 300+ models)
-//   - deepseek    → api.deepseek.com/v1    (DeepSeek-Chat / DeepSeek-R1)
-//   - qwen        → DashScope compatible-mode (Alibaba Qwen2.5 / Qwen-Max)
+//   - openrouter  -> openrouter.ai/api/v1   (Fusion auto-router across 300+ models)
+//   - deepseek    -> api.deepseek.com/v1    (DeepSeek-Chat / DeepSeek-R1)
+//   - qwen        -> DashScope compatible-mode (Alibaba Qwen2.5 / Qwen-Max)
+//   - orbit       -> api.orbitai.global/v1  (Orbit Space API Relay)
 //   - openai-compatible (override via CONFIG.llm.baseUrl)
 // All providers accept Anthropic-style tool schemas and we adapt them to the
 // OpenAI `tools` array + `tool_choice` shape.
@@ -29,6 +30,11 @@ const PROVIDER_DEFAULTS = {
     headers: {},
     label: 'Qwen (DashScope)',
   },
+  orbit: {
+    baseUrl: 'https://api.orbitai.global/v1',
+    headers: {},
+    label: 'Orbit AI',
+  },
 };
 
 function anthropicToolToOpenAI(tool) {
@@ -46,6 +52,7 @@ export async function runToolAgentOpenRouter({ model, systemPrompt, userPrompt, 
   const provider = CONFIG.llm.provider;
   const cfg = PROVIDER_DEFAULTS[provider];
   if (!cfg) throw new Error(`Unknown OAI-compatible provider: ${provider}`);
+  const baseUrl = CONFIG.llm.baseUrl || cfg.baseUrl;
 
   const apiKey = CONFIG.llm.providerKey;
   if (!apiKey) throw new Error(`API key not set for provider ${provider}`);
@@ -64,7 +71,7 @@ export async function runToolAgentOpenRouter({ model, systemPrompt, userPrompt, 
     tool_choice: { type: 'function', function: { name: tool.name } },
   };
 
-  const resp = await fetch(`${cfg.baseUrl}/chat/completions`, {
+  const resp = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

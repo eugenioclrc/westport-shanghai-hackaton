@@ -9,7 +9,7 @@
   export let findings = null;
   export let costUsd = 0;
   export let accent = 'var(--accent)';
-  export let runningLabel = 'Reading regulations…';
+  export let runningLabel = 'Reading regulations';
   export let idleLabel = 'Queued';
   export let progress = null;
 
@@ -69,18 +69,18 @@
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: var(--radius);
     padding: 14px 16px;
     transition: border-color .25s, background .25s;
   }
-  .card.status-running { border-color: var(--accent-local); background: rgba(46,196,182,0.04); }
-  .card.status-complete { border-color: rgba(255,255,255,0.10); }
-  .card.status-failed { border-color: rgba(255,133,133,0.32); background: rgba(255,133,133,0.05); }
+  .card.status-running { border-color: var(--accent-local); background: rgba(0, 113, 227, 0.05); }
+  .card.status-complete { border-color: var(--border-strong); }
+  .card.status-failed { border-color: rgba(199, 51, 47, 0.28); background: var(--red-soft); }
 
   .head { display: flex; align-items: center; gap: 12px; }
   .ic {
-    width: 36px; height: 36px; border-radius: 10px;
-    background: rgba(46,196,182,0.10);
+    width: 36px; height: 36px; border-radius: 8px;
+    background: rgba(0, 113, 227, 0.08);
     display: grid; place-items: center;
     flex-shrink: 0;
   }
@@ -103,8 +103,8 @@
   .dot.complete { background: var(--accent-local); }
   .dot.failed { background: var(--danger); }
   @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(46,196,182,0.55); }
-    100% { box-shadow: 0 0 0 8px rgba(46,196,182,0); }
+    0% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.32); }
+    100% { box-shadow: 0 0 0 8px rgba(0, 113, 227, 0); }
   }
 
   .progress {
@@ -115,7 +115,7 @@
   }
   .bar {
     margin-top: 10px;
-    height: 4px; border-radius: 999px; background: rgba(255,255,255,0.06);
+    height: 4px; border-radius: 999px; background: rgba(29,29,31,0.07);
     overflow: hidden;
   }
   .bar-fill {
@@ -131,9 +131,9 @@
     position: relative;
     background: linear-gradient(
       90deg,
-      rgba(255,255,255,0.04) 0%,
-      rgba(255,255,255,0.10) 50%,
-      rgba(255,255,255,0.04) 100%
+      rgba(29,29,31,0.04) 0%,
+      rgba(29,29,31,0.10) 50%,
+      rgba(29,29,31,0.04) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.8s ease-in-out infinite;

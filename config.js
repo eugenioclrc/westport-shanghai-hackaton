@@ -6,18 +6,21 @@ const openrouterKey = process.env.OPENROUTER_API_KEY || '';
 const deepseekKey = process.env.DEEPSEEK_API_KEY || '';
 // DashScope is Alibaba Cloud's Qwen API endpoint. Accept both env names.
 const qwenKey = process.env.DASHSCOPE_API_KEY || process.env.QWEN_API_KEY || '';
+const orbitKey = process.env.ORBIT_API_KEY || '';
 
 // Provider priority (auto-detect if LLM_PROVIDER not set):
-//   1. LLM_PROVIDER env  (anthropic | openrouter | deepseek | qwen)
-//   2. DEEPSEEK_API_KEY  → deepseek           (Shanghai-friendly default)
-//   3. DASHSCOPE_API_KEY → qwen
-//   4. OPENROUTER_API_KEY → openrouter
-//   5. ANTHROPIC_API_KEY  → anthropic
-//   6. fall through to mock
+//   1. LLM_PROVIDER env  (anthropic | openrouter | deepseek | qwen | orbit)
+//   2. DEEPSEEK_API_KEY  -> deepseek           (Shanghai-friendly default)
+//   3. DASHSCOPE_API_KEY -> qwen
+//   4. ORBIT_API_KEY     -> orbit
+//   5. OPENROUTER_API_KEY -> openrouter
+//   6. ANTHROPIC_API_KEY  -> anthropic
+//   7. fall through to mock
 let provider = (process.env.LLM_PROVIDER || '').toLowerCase();
 if (!provider) {
   if (deepseekKey) provider = 'deepseek';
   else if (qwenKey) provider = 'qwen';
+  else if (orbitKey) provider = 'orbit';
   else if (openrouterKey) provider = 'openrouter';
   else if (anthropicKey) provider = 'anthropic';
   else provider = 'anthropic';
@@ -28,6 +31,7 @@ const providerKey = {
   openrouter: openrouterKey,
   deepseek: deepseekKey,
   qwen: qwenKey,
+  orbit: orbitKey,
 }[provider] || '';
 
 const mock = process.env.LLM_MOCK === '1' || !providerKey;
@@ -53,6 +57,11 @@ const defaults = {
     agent: 'qwen-plus',
     orchestrator: 'qwen-max',
   },
+  orbit: {
+    // Orbit relay is OpenAI-compatible. gpt-5.4 is shown in Orbit examples.
+    agent: 'gpt-5.4',
+    orchestrator: 'gpt-5.4',
+  },
 };
 
 export const CONFIG = {
@@ -65,10 +74,14 @@ export const CONFIG = {
     apiKey: anthropicKey,
     // per-provider key used by the OAI-compatible client
     providerKey,
+    // optional override for OpenAI-compatible gateways (e.g. Orbit relay).
+    // If empty, each provider default URL is used.
+    baseUrl: process.env.LLM_BASE_URL || process.env.ORBIT_BASE_URL || '',
     // kept for any caller still using these names
     openrouterKey,
     deepseekKey,
     qwenKey,
+    orbitKey,
     mock,
     models: {
       agent: process.env.LLM_MODEL_AGENT || defaults[provider].agent,

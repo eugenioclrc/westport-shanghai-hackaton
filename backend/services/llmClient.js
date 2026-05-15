@@ -3,6 +3,7 @@
 //   - mock        (deterministic canned responses, no network)
 //   - anthropic   (Anthropic SDK, tool_use)
 //   - openrouter  (OpenRouter Fusion auto-routing via OpenAI-compatible API)
+//   - orbit       (Orbit Space API Relay, OpenAI-compatible API)
 // Every backend caller uses runToolAgent() and gets the same shape back.
 import Anthropic from '@anthropic-ai/sdk';
 import { CONFIG } from '../../config.js';
@@ -49,7 +50,7 @@ export async function runToolAgent({ model, systemPrompt, userPrompt, tool }) {
 
   // All OpenAI-compatible providers (OpenRouter Fusion / DeepSeek / Qwen) share
   // the same wire format and the same client.
-  const OAI_PROVIDERS = new Set(['openrouter', 'deepseek', 'qwen']);
+  const OAI_PROVIDERS = new Set(['openrouter', 'deepseek', 'qwen', 'orbit']);
   if (OAI_PROVIDERS.has(CONFIG.llm.provider)) {
     const result = await runToolAgentOpenRouter({ model, systemPrompt, userPrompt, tool });
     return {
@@ -118,7 +119,7 @@ function mockToolResponse({ tool, userPrompt }) {
           { severity: 'high', regulation: 'Radio Equipment 2014/53/EU', citation: 'Art. 3.1(b) + 3.2', requirement: 'Wi-Fi 6 + BLE 5.3 modules must pass RED conformity assessment in an EU lab', gap: 'Wireless stack tested in Shenzhen; no EU notified-body RED file', recommendation: 'Re-test radio at Eurofins / BACL EU lab; obtain RED DoC', estimated_cost_eur: 11500, estimated_weeks: 7 },
           { severity: 'high', regulation: 'AI Act 2024/1689', citation: 'Annex III §5(d) + Art. 6', requirement: 'Embodied AI in environments with humans may be high-risk; logging + transparency obligations apply', gap: 'No risk classification document; no Annex IV technical documentation', recommendation: 'Author Annex IV file; classify use cases; implement logging per Art. 12', estimated_cost_eur: 22000, estimated_weeks: 10 },
           { severity: 'medium', regulation: 'EMC 2014/30/EU', citation: 'EN 55032 / EN 61000-6-2', requirement: 'Industrial EMC limits for actuator drives + power electronics', gap: 'No EMC chamber test for the integrated robot', recommendation: 'Book EMC chamber at TÜV SÜD Munich for system-level test', estimated_cost_eur: 9200, estimated_weeks: 4 },
-          { severity: 'medium', regulation: 'LVD 2014/35/EU', citation: 'Annex III Module A', requirement: '50–1000 V AC / 75–1500 V DC charger + internal bus safety', gap: 'Onboard charger ENN 60335-1 test not on file', recommendation: 'Commission EN 60335-1 + EN 62368-1 evaluation', estimated_cost_eur: 8400, estimated_weeks: 6 },
+          { severity: 'medium', regulation: 'LVD 2014/35/EU', citation: 'Annex III Module A', requirement: '50-1000 V AC / 75-1500 V DC charger + internal bus safety', gap: 'Onboard charger ENN 60335-1 test not on file', recommendation: 'Commission EN 60335-1 + EN 62368-1 evaluation', estimated_cost_eur: 8400, estimated_weeks: 6 },
         ],
       };
     }
@@ -134,7 +135,7 @@ function mockToolResponse({ tool, userPrompt }) {
     if (isRobot) {
       return {
         findings: [
-          { severity: 'high', regulation: 'EU Battery 2023/1542', citation: 'Art. 77 (Digital Product Passport)', requirement: 'On-board industrial battery > 2 kWh requires QR-linked DPP', gap: 'No DPP data model for the robot battery pack', recommendation: 'Implement DPP fields (chemistry, capacity, recyclate %, second-life) — CIRPASS-aligned', estimated_cost_eur: 18000, estimated_weeks: 10 },
+          { severity: 'high', regulation: 'EU Battery 2023/1542', citation: 'Art. 77 (Digital Product Passport)', requirement: 'On-board industrial battery > 2 kWh requires QR-linked DPP', gap: 'No DPP data model for the robot battery pack', recommendation: 'Implement DPP fields (chemistry, capacity, recyclate %, second-life) - CIRPASS-aligned', estimated_cost_eur: 18000, estimated_weeks: 10 },
           { severity: 'medium', regulation: 'WEEE 2012/19/EU', citation: 'Annex I (Cat. 6) + Art. 11', requirement: 'Electrical/electronic equipment producer responsibility + WEEE registration per Member State', gap: 'No WEEE registration in DE/FR; no take-back partner', recommendation: 'Register with stiftung-ear (DE) and ADEME (FR); contract with WEEE compliance scheme', estimated_cost_eur: 4500, estimated_weeks: 4 },
           { severity: 'medium', regulation: 'EU Battery 2023/1542', citation: 'Art. 7 + Annex II', requirement: 'Carbon footprint declaration for the on-board pack', gap: 'No LCA performed at the pack level', recommendation: 'Cradle-to-gate LCA for the pack only (cells supplied by third party)', estimated_cost_eur: 9500, estimated_weeks: 6 },
         ],
@@ -150,7 +151,7 @@ function mockToolResponse({ tool, userPrompt }) {
     };
   }
 
-  // Orchestrator — distinct numbers per archetype.
+  // Orchestrator - distinct numbers per archetype.
   if (isRobot) {
     return {
       compliance_score: 31,

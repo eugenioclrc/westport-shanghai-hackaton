@@ -3,7 +3,7 @@
   export let size = 88;
   export let thickness = 6;
   export let stroke = 'var(--accent)';
-  export let track = 'rgba(255,255,255,0.08)';
+  export let track = 'rgba(29,29,31,0.08)';
   export let label = null;
 
   $: r = (size - thickness) / 2;
@@ -23,5 +23,5 @@
 
 <style>
   .ring { display: block; }
-  text { font-family: 'Geist', sans-serif; }
+  text { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
 </style>

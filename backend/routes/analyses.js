@@ -15,6 +15,9 @@ const getAnalysisStmt = db.prepare('SELECT * FROM analyses WHERE id = ? AND comp
 const listForCompanyStmt = db.prepare(
   'SELECT id, product_id, status, compliance_score, total_cost_eur, weeks_to_launch, summary, started_at, finished_at FROM analyses WHERE company_id = ? ORDER BY started_at DESC LIMIT 50'
 );
+const claimQueuedAnalysisStmt = db.prepare(
+  "UPDATE analyses SET status = 'running' WHERE id = ? AND company_id = ? AND status = 'queued'"
+);
 
 router.post('/', authMiddleware, analysisLimiter, (req, res) => {
   const { product, productId } = req.body || {};
@@ -58,39 +61,72 @@ router.get('/:id/stream', (req, res) => {
     res.write(`data: ${JSON.stringify(data)}\n\n`);
   }
 
+  function sendComplete(row) {
+    const report = JSON.parse(row.report);
+    emit('replay', { status: 'complete', report });
+    emit('complete', {
+      analysisId: row.id,
+      score: row.compliance_score,
+      summary: row.summary,
+      weeks: row.weeks_to_launch,
+      cost: row.total_cost_eur,
+      ...report,
+    });
+    return res.end();
+  }
+
   // Keepalive ping every 15 s
   const keepalive = setInterval(() => res.write(': ping\n\n'), 15_000);
   req.on('close', () => clearInterval(keepalive));
 
   if (analysis.status === 'complete') {
-    emit('replay', { status: 'complete', report: JSON.parse(analysis.report) });
-    emit('complete', {
-      analysisId: analysis.id,
-      score: analysis.compliance_score,
-      summary: analysis.summary,
-      weeks: analysis.weeks_to_launch,
-      cost: analysis.total_cost_eur,
-      ...JSON.parse(analysis.report),
-    });
-    return res.end();
+    return sendComplete(analysis);
   }
   if (analysis.status === 'failed') {
     emit('failed', { error: analysis.error || 'unknown' });
     return res.end();
   }
 
-  // Kick off the run.
-  const productSnapshot = JSON.parse(analysis.product_snapshot);
-  runAnalysis({ analysisId: analysis.id, productSnapshot, emit })
-    .then(() => {
+  // Exactly one stream request claims and executes a queued analysis.
+  // Followers attach to the stream and wait for terminal status.
+  const claimed = claimQueuedAnalysisStmt.run(req.params.id, companyId).changes === 1;
+  if (claimed) {
+    const productSnapshot = JSON.parse(analysis.product_snapshot);
+    runAnalysis({ analysisId: analysis.id, productSnapshot, emit })
+      .then(() => {
+        clearInterval(keepalive);
+        res.end();
+      })
+      .catch((err) => {
+        emit('failed', { error: err.message });
+        clearInterval(keepalive);
+        res.end();
+      });
+    return;
+  }
+
+  emit('status', { status: 'running', analysisId: analysis.id });
+  const followTimer = setInterval(() => {
+    const latest = getAnalysisStmt.get(req.params.id, companyId);
+    if (!latest) {
+      emit('failed', { error: 'NOT_FOUND' });
+      clearInterval(followTimer);
       clearInterval(keepalive);
-      res.end();
-    })
-    .catch((err) => {
-      emit('failed', { error: err.message });
+      return res.end();
+    }
+    if (latest.status === 'complete') {
+      clearInterval(followTimer);
       clearInterval(keepalive);
-      res.end();
-    });
+      return sendComplete(latest);
+    }
+    if (latest.status === 'failed') {
+      emit('failed', { error: latest.error || 'unknown' });
+      clearInterval(followTimer);
+      clearInterval(keepalive);
+      return res.end();
+    }
+  }, 1000);
+  req.on('close', () => clearInterval(followTimer));
 });
 
 router.get('/', authMiddleware, (req, res) => {

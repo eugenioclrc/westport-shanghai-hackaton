@@ -8,7 +8,7 @@
 <style>
   .pill {
     display: inline-block; padding: 2px 8px; border-radius: 999px;
-    font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0;
     border: 1px solid transparent;
   }
   .sev-high   { background: rgba(255, 133, 133, 0.12); color: var(--high); border-color: rgba(255, 133, 133, 0.30); }
