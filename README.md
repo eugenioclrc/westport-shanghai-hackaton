@@ -1,3 +1,7 @@
+## And the link to the vercel
+
+https://westport-shanghai-hackaton.vercel.app/
+
 # WestPort.ai
 
 > AI-powered EU compliance for Chinese hardware startups. Drop in your product
