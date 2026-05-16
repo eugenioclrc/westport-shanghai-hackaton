@@ -42,7 +42,7 @@
 <div class="screen">
   <div class="app-shell">
     <div class="window-bar">
-      <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="bar-brand">WestPort.ai</div>
       <div class="window-title">EU readiness roadmap</div>
       <div class="toolbar-actions">
         <button class="icon-button" aria-label="Back to cockpit" on:click={backHome}><ArrowLeft size={17} /></button>
@@ -161,7 +161,7 @@
                   <p>{finding.requirement}</p>
                   <div><b>Gap:</b> {finding.gap}</div>
                   <div><b>Fix:</b> {finding.recommendation}</div>
-                  <small class="mono num">
+                  <small class="num">
                     €{finding.estimated_cost_eur.toLocaleString('en-US')} · {finding.estimated_weeks} weeks · {finding.agent}
                   </small>
                 </article>
@@ -191,9 +191,9 @@
     align-items: center;
     border: 1px solid var(--border);
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.72);
+    background: var(--panel-strong);
     box-shadow: var(--shadow-soft);
-    padding: 22px;
+    padding: 24px;
   }
 
   .score-block {
@@ -204,7 +204,7 @@
 
   .score-block span {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
   }
 
@@ -217,7 +217,7 @@
   .product-meta {
     margin-top: 6px;
     color: var(--muted);
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
   .summary-copy p {
@@ -225,7 +225,7 @@
     margin: 14px 0 0;
     color: var(--muted);
     line-height: 1.55;
-    font-size: 16px;
+    font-size: 1rem;
   }
 
   .summary-actions {
@@ -238,25 +238,40 @@
   .stat-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 14px;
+    gap: 0;
+    margin-top: 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel-strong);
+    overflow: hidden;
   }
 
   .stat {
-    padding: 16px;
+    padding: 18px 20px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .stat + .stat {
+    border-left: 1px solid var(--border);
   }
 
   .stat span,
   .stat small {
     display: block;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   .stat strong {
     display: block;
-    margin: 7px 0 4px;
-    font-size: 25px;
+    margin: 8px 0 4px;
+    font-family: var(--display);
+    font-weight: 560;
+    font-size: 1.6875rem;
+    letter-spacing: -0.01em;
   }
 
   .work-grid {
@@ -282,13 +297,13 @@
 
   h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 
   .section-head p {
     margin: 3px 0 0;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   .action-list,
@@ -304,7 +319,7 @@
     gap: 10px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: rgba(255, 255, 255, 0.68);
+    background: var(--bg-solid);
     padding: 12px;
   }
 
@@ -323,13 +338,13 @@
     gap: 8px;
     margin-top: 5px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   .body {
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: rgba(255, 255, 255, 0.68);
+    background: var(--bg-solid);
     padding: 12px;
   }
 
@@ -342,7 +357,7 @@
   .body span {
     margin-top: 4px;
     color: var(--accent);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
   }
 
@@ -359,7 +374,7 @@
   .finding {
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: rgba(255, 255, 255, 0.68);
+    background: var(--bg-solid);
     padding: 12px;
   }
 
@@ -372,14 +387,14 @@
 
   .finding-head span {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   .finding p,
   .finding div {
     margin: 8px 0 0;
     color: var(--text);
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.45;
   }
 
@@ -387,13 +402,13 @@
     display: block;
     margin-top: 9px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
 
   .disclaimer {
     margin-top: 18px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.5;
   }
 

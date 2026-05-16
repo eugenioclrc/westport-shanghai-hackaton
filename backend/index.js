@@ -3,7 +3,6 @@ import express from 'express';
 import cors from 'cors';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import './db.js';
 import { authMiddleware } from './middleware/auth.js';
 import { globalLimiter } from './middleware/rateLimit.js';
 import { CONFIG } from '../config.js';

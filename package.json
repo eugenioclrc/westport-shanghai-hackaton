@@ -16,15 +16,11 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "start": "node backend/index.js",
-    "seed": "node backend/seed.js",
-    "db:push": "node backend/scripts/db-push.js",
     "corpus:build": "node backend/scripts/build-corpus.js",
     "test": "node --test backend/tests/*.test.js",
     "audit": "pnpm audit --audit-level=moderate"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "0.32.1",
-    "@libsql/client": "0.17.3",
     "@lucide/svelte": "1.16.0",
     "cors": "2.8.5",
     "express": "5.2.1",

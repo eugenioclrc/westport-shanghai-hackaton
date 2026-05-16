@@ -18,7 +18,7 @@ function persistent(key, initial) {
   return w;
 }
 
-export const screen = persistent('wp:screen', 'landing'); // 'landing' | 'new' | 'running' | 'report' | 'history'
+export const screen = persistent('wp:screen', 'landing'); // 'landing' | 'new' | 'running' | 'report'
 export const currentProduct = persistent('wp:currentProduct', null);
 export const currentAnalysisId = persistent('wp:currentAnalysisId', null);
 export const agentState = writable({

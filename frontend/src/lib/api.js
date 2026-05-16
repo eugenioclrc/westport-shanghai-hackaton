@@ -50,12 +50,4 @@ export async function createAnalysis(product, productId) {
   return jfetch('POST', '/analyses', { product, productId });
 }
 
-export async function listAnalyses() {
-  return jfetch('GET', '/analyses');
-}
-
-export async function getAnalysis(id) {
-  return jfetch('GET', `/analyses/${id}`);
-}
-
-export default { ensureLogin, getMe, getHealth, listProducts, listSamples, createAnalysis, listAnalyses, getAnalysis, getToken };
+export default { ensureLogin, getMe, getHealth, listProducts, listSamples, createAnalysis, getToken };

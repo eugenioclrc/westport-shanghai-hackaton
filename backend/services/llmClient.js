@@ -1,33 +1,16 @@
 // FILE: backend/services/llmClient.js
-// Router for the three supported execution modes:
+// Two execution modes:
 //   - mock        (deterministic canned responses, no network)
-//   - anthropic   (Anthropic SDK, tool_use)
 //   - openrouter  (OpenRouter Fusion auto-routing via OpenAI-compatible API)
-//   - orbit       (Orbit Space API Relay, OpenAI-compatible API)
 // Every backend caller uses runToolAgent() and gets the same shape back.
-import Anthropic from '@anthropic-ai/sdk';
 import { CONFIG } from '../../config.js';
 import { runToolAgentOpenRouter } from './openrouterClient.js';
 
-let anthropicClient = null;
-function getAnthropicClient() {
-  if (!anthropicClient) {
-    if (!CONFIG.llm.apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
-    anthropicClient = new Anthropic({ apiKey: CONFIG.llm.apiKey });
-  }
-  return anthropicClient;
-}
-
-// Per-1M-token USD pricing (May 2026). Informational only.
-// Mainland-friendly Chinese models added for Shanghai judges.
+// Per-1M-token USD pricing. Informational only (drives the cost ticker).
 const PRICING = {
-  'claude-haiku-4-5-20251001': { input: 0.80, output: 4.00 },
-  'claude-sonnet-4-6':         { input: 3.00, output: 15.00 },
-  'openrouter/fusion':         { input: 1.50, output: 6.00 },
-  'deepseek-chat':             { input: 0.27, output: 1.10 },
-  'deepseek-reasoner':         { input: 0.55, output: 2.19 },
-  'qwen-plus':                 { input: 0.40, output: 1.20 },
-  'qwen-max':                  { input: 2.40, output: 9.60 },
+  'deepseek/deepseek-chat-v3.1': { input: 0.20, output: 0.80 },
+  'deepseek/deepseek-chat':      { input: 0.20, output: 0.80 },
+  'openrouter/auto':             { input: 1.50, output: 6.00 },
 };
 
 function priceUsd(model, inputTokens, outputTokens) {
@@ -48,38 +31,12 @@ export async function runToolAgent({ model, systemPrompt, userPrompt, tool }) {
     };
   }
 
-  // All OpenAI-compatible providers (OpenRouter Fusion / DeepSeek / Qwen) share
-  // the same wire format and the same client.
-  const OAI_PROVIDERS = new Set(['openrouter', 'deepseek', 'qwen', 'orbit']);
-  if (OAI_PROVIDERS.has(CONFIG.llm.provider)) {
-    const result = await runToolAgentOpenRouter({ model, systemPrompt, userPrompt, tool });
-    return {
-      parsed: result.parsed,
-      raw: result.raw,
-      usage: result.usage,
-      costUsd: priceUsd(model, result.usage.input_tokens, result.usage.output_tokens),
-    };
-  }
-
-  // Default: Anthropic SDK
-  const c = getAnthropicClient();
-  const resp = await c.messages.create({
-    model,
-    max_tokens: CONFIG.llm.maxTokens,
-    temperature: CONFIG.llm.temperature,
-    system: systemPrompt,
-    tools: [tool],
-    tool_choice: { type: 'tool', name: tool.name },
-    messages: [{ role: 'user', content: userPrompt }],
-  });
-
-  const toolUse = (resp.content || []).find((b) => b.type === 'tool_use');
-  if (!toolUse) throw new Error(`Agent ${tool.name} did not emit a tool_use block`);
+  const result = await runToolAgentOpenRouter({ model, systemPrompt, userPrompt, tool });
   return {
-    parsed: toolUse.input,
-    raw: resp,
-    usage: resp.usage,
-    costUsd: priceUsd(model, resp.usage.input_tokens, resp.usage.output_tokens),
+    parsed: result.parsed,
+    raw: result.raw,
+    usage: result.usage,
+    costUsd: priceUsd(model, result.usage.input_tokens, result.usage.output_tokens),
   };
 }
 

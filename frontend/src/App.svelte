@@ -4,7 +4,6 @@
   import NewAnalysis from './screens/NewAnalysis.svelte';
   import Running from './screens/Running.svelte';
   import Report from './screens/Report.svelte';
-  import History from './screens/History.svelte';
 </script>
 
 <div class="app">
@@ -12,7 +11,6 @@
   {:else if $screen === 'new'}<NewAnalysis />
   {:else if $screen === 'running'}<Running />
   {:else if $screen === 'report'}<Report />
-  {:else if $screen === 'history'}<History />
   {/if}
 </div>
 

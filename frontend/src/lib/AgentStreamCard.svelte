@@ -48,7 +48,7 @@
     <div class="bar bar-pulse"></div>
   {:else if status === 'running'}
     {#if progress}
-      <div class="progress mono">{progress}</div>
+      <div class="progress">{progress}</div>
     {/if}
     <div class="bar"><div class="bar-fill"></div></div>
   {/if}
@@ -60,7 +60,7 @@
       {#if counts.low}<SeverityPill severity="low" />×{counts.low}{/if}
     </div>
     {#if costUsd}
-      <div class="cost mono">cost ≈ ${costUsd.toFixed(4)} USD</div>
+      <div class="cost">cost ≈ ${costUsd.toFixed(4)} USD</div>
     {/if}
   {/if}
 </div>
@@ -73,43 +73,47 @@
     padding: 14px 16px;
     transition: border-color .25s, background .25s;
   }
-  .card.status-running { border-color: var(--accent-local); background: rgba(0, 113, 227, 0.05); }
+  .card.status-running { border-color: var(--accent-local); background: #f4f7fb; background: color-mix(in srgb, var(--accent-local) 5%, white); }
   .card.status-complete { border-color: var(--border-strong); }
   .card.status-failed { border-color: rgba(199, 51, 47, 0.28); background: var(--red-soft); }
 
   .head { display: flex; align-items: center; gap: 12px; }
   .ic {
-    width: 36px; height: 36px; border-radius: 8px;
-    background: rgba(0, 113, 227, 0.08);
+    width: 38px; height: 38px; border-radius: 9px;
+    background: #eef2f8;
+    background: color-mix(in srgb, var(--accent-local) 10%, white);
     display: grid; place-items: center;
     flex-shrink: 0;
   }
   .title { flex: 1; min-width: 0; }
-  .name { font-weight: 600; font-size: 14.5px; }
-  .sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .name { font-weight: 600; font-size: 0.90625rem; }
+  .sub { color: var(--muted); font-size: 0.78125rem; margin-top: 2px; }
   .state {
     display: flex; align-items: center; gap: 6px;
-    color: var(--muted); font-size: 12px;
+    color: var(--muted); font-size: 0.75rem;
     white-space: nowrap;
   }
   .dot {
-    width: 8px; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.18);
+    position: relative;
+    width: 8px; height: 8px; border-radius: 999px; background: var(--border-strong);
   }
-  .dot.running {
+  .dot.running { background: var(--accent-local); }
+  .dot.running::after {
+    content: "";
+    position: absolute; inset: 0; border-radius: 999px;
     background: var(--accent-local);
-    box-shadow: 0 0 0 0 var(--accent-local);
-    animation: pulse 1.6s ease-out infinite;
+    animation: ring 1.6s ease-out infinite;
   }
   .dot.complete { background: var(--accent-local); }
   .dot.failed { background: var(--danger); }
-  @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.32); }
-    100% { box-shadow: 0 0 0 8px rgba(0, 113, 227, 0); }
+  @keyframes ring {
+    0% { transform: scale(1); opacity: 0.45; }
+    100% { transform: scale(3.2); opacity: 0; }
   }
 
   .progress {
     margin-top: 10px;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--accent-local);
     letter-spacing: 0.01em;
   }
@@ -144,7 +148,7 @@
   }
   .counts {
     margin-top: 12px; display: flex; gap: 8px; align-items: center;
-    font-size: 12.5px; color: var(--muted);
+    font-size: 0.78125rem; color: var(--muted);
   }
-  .cost { margin-top: 6px; font-size: 11px; color: var(--faint); }
+  .cost { margin-top: 6px; font-size: 0.75rem; color: var(--faint); }
 </style>

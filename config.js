@@ -1,67 +1,24 @@
 // FILE: config.js
 const ENV = process.env.ENV || 'dev';
 
-const anthropicKey = process.env.ANTHROPIC_API_KEY || '';
+// Single provider: OpenRouter (Fusion auto-routing, OpenAI-compatible API).
+// Set OPENROUTER_API_KEY in the environment. If it is missing, the backend
+// falls back to deterministic mock responses so the UI still demos.
 const openrouterKey = process.env.OPENROUTER_API_KEY || '';
-const deepseekKey = process.env.DEEPSEEK_API_KEY || '';
-// DashScope is Alibaba Cloud's Qwen API endpoint. Accept both env names.
-const qwenKey = process.env.DASHSCOPE_API_KEY || process.env.QWEN_API_KEY || '';
-const orbitKey = process.env.ORBIT_API_KEY || '';
+const anthropicKey = ''; // kept only so legacy CONFIG.llm.apiKey reads ''.
 
-// Provider priority (auto-detect if LLM_PROVIDER not set):
-//   1. LLM_PROVIDER env  (anthropic | openrouter | deepseek | qwen | orbit)
-//   2. DEEPSEEK_API_KEY  -> deepseek           (Shanghai-friendly default)
-//   3. DASHSCOPE_API_KEY -> qwen
-//   4. ORBIT_API_KEY     -> orbit
-//   5. OPENROUTER_API_KEY -> openrouter
-//   6. ANTHROPIC_API_KEY  -> anthropic
-//   7. fall through to mock
-let provider = (process.env.LLM_PROVIDER || '').toLowerCase();
-if (!provider) {
-  if (deepseekKey) provider = 'deepseek';
-  else if (qwenKey) provider = 'qwen';
-  else if (orbitKey) provider = 'orbit';
-  else if (openrouterKey) provider = 'openrouter';
-  else if (anthropicKey) provider = 'anthropic';
-  else provider = 'anthropic';
-}
-
-const providerKey = {
-  anthropic: anthropicKey,
-  openrouter: openrouterKey,
-  deepseek: deepseekKey,
-  qwen: qwenKey,
-  orbit: orbitKey,
-}[provider] || '';
+const provider = 'openrouter';
+const providerKey = openrouterKey;
 
 const mock = process.env.LLM_MOCK === '1' || !providerKey;
 
-// Model defaults per provider. Override with LLM_MODEL_AGENT / LLM_MODEL_ORCHESTRATOR.
+// Model defaults (OpenRouter model IDs). Override with LLM_MODEL_AGENT /
+// LLM_MODEL_ORCHESTRATOR. DeepSeek V3.1 is strong at forced tool calls, cheap,
+// and available in-region (incl. mainland China). `openrouter/auto` is a safe
+// fallback if a specific model is unavailable.
 const defaults = {
-  anthropic: {
-    agent: 'claude-haiku-4-5-20251001',
-    orchestrator: 'claude-sonnet-4-6',
-  },
-  openrouter: {
-    // openrouter/fusion = auto-routing meta-model across 300+ providers
-    agent: 'openrouter/fusion',
-    orchestrator: 'openrouter/fusion',
-  },
-  deepseek: {
-    // DeepSeek-Chat handles tool use deterministically and ships from Hangzhou
-    agent: 'deepseek-chat',
-    orchestrator: 'deepseek-chat',
-  },
-  qwen: {
-    // Qwen-Plus for agents (fast), Qwen-Max for orchestrator (highest reasoning)
-    agent: 'qwen-plus',
-    orchestrator: 'qwen-max',
-  },
-  orbit: {
-    // Orbit relay is OpenAI-compatible. gpt-5.4 is shown in Orbit examples.
-    agent: 'gpt-5.4',
-    orchestrator: 'gpt-5.4',
-  },
+  agent: 'deepseek/deepseek-chat-v3.1',
+  orchestrator: 'deepseek/deepseek-chat-v3.1',
 };
 
 export const CONFIG = {
@@ -70,22 +27,17 @@ export const CONFIG = {
   baseUrl: ENV === 'prod' ? 'https://api.westport.ai' : 'http://localhost:3000',
   llm: {
     provider,
-    // legacy field kept so existing llmClient.js Anthropic branch reads ANTHROPIC_API_KEY
+    // legacy field kept so the llmClient Anthropic branch compiles (unused).
     apiKey: anthropicKey,
-    // per-provider key used by the OAI-compatible client
+    // OpenRouter API key used by the OpenAI-compatible client.
     providerKey,
-    // optional override for OpenAI-compatible gateways (e.g. Orbit relay).
-    // If empty, each provider default URL is used.
-    baseUrl: process.env.LLM_BASE_URL || process.env.ORBIT_BASE_URL || '',
-    // kept for any caller still using these names
+    // optional override for the OpenAI-compatible base URL.
+    baseUrl: process.env.LLM_BASE_URL || '',
     openrouterKey,
-    deepseekKey,
-    qwenKey,
-    orbitKey,
     mock,
     models: {
-      agent: process.env.LLM_MODEL_AGENT || defaults[provider].agent,
-      orchestrator: process.env.LLM_MODEL_ORCHESTRATOR || defaults[provider].orchestrator,
+      agent: process.env.LLM_MODEL_AGENT || defaults.agent,
+      orchestrator: process.env.LLM_MODEL_ORCHESTRATOR || defaults.orchestrator,
     },
     maxTokens: 2400,
     temperature: 0.2,
@@ -95,8 +47,9 @@ export const CONFIG = {
     maxConcurrency: 3,
   },
   server: {
-    port: process.env.PORT ?? 3000,
-    jwtSecret: process.env.JWT_SECRET ?? 'westport_dev_secret_CHANGE_IN_PROD',
+    port: process.env.PORT || 3000,
+    // `||` (not `??`) so an empty JWT_SECRET= line in .env still falls back.
+    jwtSecret: process.env.JWT_SECRET || 'westport_dev_secret_CHANGE_IN_PROD',
   },
 };
 

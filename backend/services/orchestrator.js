@@ -5,8 +5,6 @@
 import { CONFIG } from '../../config.js';
 import { runAgent } from './agents.js';
 import { runToolAgent } from './llmClient.js';
-import db, { nowSec } from '../db.js';
-import { randomUUID } from 'node:crypto';
 
 const AGENTS = ['chemicals', 'electrical', 'carbon'];
 
@@ -77,30 +75,11 @@ const ORCH_TOOL = {
   },
 };
 
-async function recordAgentRun({ analysisId, agent, status, output, error, usage, costUsd, startedAt }) {
-  await db.prepare(
-    'INSERT INTO agent_runs (analysis_id, agent, status, input_tokens, output_tokens, cost_usd, output, error, started_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-  ).run(
-    analysisId,
-    agent,
-    status,
-    usage?.input_tokens ?? null,
-    usage?.output_tokens ?? null,
-    costUsd ?? null,
-    output ? JSON.stringify(output) : null,
-    error ?? null,
-    startedAt,
-    nowSec()
-  );
-}
-
-export async function runAnalysis({ analysisId, productSnapshot, emit }) {
-  await db.prepare("UPDATE analyses SET status = 'running' WHERE id = ?").run(analysisId);
-  emit('status', { status: 'running', analysisId });
+export async function runAnalysis({ productSnapshot, emit }) {
+  emit('status', { status: 'running' });
 
   // Three specialists in parallel.
   const agentPromises = AGENTS.map(async (agent) => {
-    const startedAt = nowSec();
     emit('agent_start', { agent });
     try {
       let result;
@@ -118,29 +97,9 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
       } else {
         result = await runAgent(agent, productSnapshot);
       }
-      await recordAgentRun({
-        analysisId,
-        agent,
-        status: 'complete',
-        output: result.parsed,
-        error: null,
-        usage: result.usage,
-        costUsd: result.costUsd,
-        startedAt,
-      });
       emit('agent_done', { agent, findings: result.parsed.findings, costUsd: result.costUsd });
       return { agent, ...result.parsed };
     } catch (err) {
-      await recordAgentRun({
-        analysisId,
-        agent,
-        status: 'failed',
-        output: null,
-        error: err.message,
-        usage: null,
-        costUsd: null,
-        startedAt,
-      });
       emit('agent_failed', { agent, error: err.message });
       return { agent, findings: [], error: err.message };
     }
@@ -151,7 +110,6 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
   // Orchestrator pass with all three reports.
   emit('orchestrator_start', {});
   if (DEMO_STREAM) await sleep(1500);
-  const orchStarted = nowSec();
   const userPrompt = [
     'Three specialist agents have completed their analysis of this product.',
     'Merge their findings into one prioritized EU-compliance roadmap. Deduplicate where multiple agents flagged the same gap. Score 0-100 (100 = ready to ship today). Estimate total cost and weeks-to-first-EU-shipment.',
@@ -184,66 +142,25 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
       userPrompt,
       tool: ORCH_TOOL,
     });
-    await recordAgentRun({
-      analysisId,
-      agent: 'orchestrator',
-      status: 'complete',
-      output: orch.parsed,
-      error: null,
-      usage: orch.usage,
-      costUsd: orch.costUsd,
-      startedAt: orchStarted,
-    });
   } catch (err) {
-    await recordAgentRun({
-      analysisId,
-      agent: 'orchestrator',
-      status: 'failed',
-      output: null,
-      error: err.message,
-      usage: null,
-      costUsd: null,
-      startedAt: orchStarted,
-    });
-    await db.prepare("UPDATE analyses SET status = 'failed', error = ?, finished_at = ? WHERE id = ?")
-      .run(err.message, nowSec(), analysisId);
     emit('failed', { error: err.message });
     return { ok: false, error: err.message };
   }
 
   const report = orch.parsed;
-  // Persist on analyses.
-  await db.prepare(
-    `UPDATE analyses SET status = 'complete', compliance_score = ?, total_cost_eur = ?, weeks_to_launch = ?,
-       summary = ?, report = ?, finished_at = ? WHERE id = ?`
-  ).run(
-    Math.round(report.compliance_score),
-    Math.round(report.total_cost_eur),
-    Math.round(report.weeks_to_launch),
-    report.summary,
-    JSON.stringify({ ...report, agent_reports: agentResults }),
-    nowSec(),
-    analysisId
-  );
 
+  // The full report (incl. raw agent reports) rides the `complete` event.
+  // The frontend store keeps it for the Report screen — nothing is persisted.
   emit('complete', {
-    analysisId,
     score: report.compliance_score,
     summary: report.summary,
     weeks: report.weeks_to_launch,
     cost: report.total_cost_eur,
     actions: report.top_actions,
     notified_bodies: report.notified_bodies,
+    agent_reports: agentResults,
   });
   return { ok: true, report };
 }
 
-export async function createAnalysis({ companyId, productSnapshot, productId }) {
-  const id = `an_${randomUUID().replace(/-/g, '')}`;
-  await db.prepare(
-    "INSERT INTO analyses (id, company_id, product_id, product_snapshot, status, started_at) VALUES (?, ?, ?, ?, 'queued', ?)"
-  ).run(id, companyId, productId ?? null, JSON.stringify(productSnapshot), nowSec());
-  return id;
-}
-
-export default { runAnalysis, createAnalysis };
+export default { runAnalysis };
