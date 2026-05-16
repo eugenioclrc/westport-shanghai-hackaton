@@ -1,35 +1,18 @@
-// FILE: backend/seed.js
-// Idempotent seed: one demo company (BoltLeap Energy, fictional Series B
-// battery cell maker), an admin user, and two sample products judges can pick
-// from on the landing page (cathode-NMC EV battery cell + humanoid robot).
-import db, { nowSec } from './db.js';
+// FILE: backend/data/seed.js
+// Static reference data. The app is stateless — there is no database — so the
+// demo tenant, companies, and sample products live here as plain constants.
+// `/auth/login` issues a guest seat in DEFAULT_COMPANY_ID; the sample products
+// are what judges pick from on the landing page.
 
-const upsertCompanyStmt = db.prepare(
-  `INSERT INTO companies (id, name, sector, hq_city, created_at)
-   VALUES (?, ?, ?, ?, ?)
-   ON CONFLICT(id) DO UPDATE SET name = excluded.name, sector = excluded.sector`
-);
-const upsertUserStmt = db.prepare(
-  `INSERT INTO users (id, company_id, email, display_name, role, created_at)
-   VALUES (?, ?, ?, ?, ?, ?)
-   ON CONFLICT(id) DO UPDATE SET company_id = excluded.company_id, role = excluded.role`
-);
-const upsertProductStmt = db.prepare(
-  `INSERT INTO products (id, company_id, name, category, spec, target_country, created_at)
-   VALUES (?, ?, ?, ?, ?, ?, ?)
-   ON CONFLICT(id) DO UPDATE SET spec = excluded.spec`
-);
+export const DEFAULT_COMPANY_ID = 'demo';
 
-const now = nowSec();
+export const COMPANIES = [
+  { id: 'boltleap', name: 'BoltLeap Energy', sector: 'battery', hq_city: 'Hefei, China' },
+  { id: 'demo', name: 'Demo Sample Library', sector: 'consumer', hq_city: 'Shanghai, China' },
+  { id: 'skywalker', name: 'Skywalker Robotics', sector: 'robotics', hq_city: 'Shenzhen, China' },
+];
 
-// Demo tenant: companies the user "is" when logging in as guest.
-upsertCompanyStmt.run('boltleap', 'BoltLeap Energy', 'battery', 'Hefei, China', now);
-upsertCompanyStmt.run('demo', 'Demo Sample Library', 'consumer', 'Shanghai, China', now);
-upsertCompanyStmt.run('skywalker', 'Skywalker Robotics', 'robotics', 'Shenzhen, China', now);
-
-upsertUserStmt.run('admin_001', 'boltleap', 'admin@boltleap.cn', 'Admin', 'admin', now);
-
-const products = [
+export const SAMPLE_PRODUCTS = [
   {
     id: 'sample_battery_nmc',
     company_id: 'demo',
@@ -70,11 +53,9 @@ const products = [
   },
 ];
 
-for (const p of products) {
-  upsertProductStmt.run(p.id, p.company_id, p.name, p.category, JSON.stringify(p.spec), p.target_country, now);
-}
+export const COMPANY_BY_ID = new Map(COMPANIES.map((c) => [c.id, c]));
+export const SAMPLE_BY_ID = new Map(SAMPLE_PRODUCTS.map((p) => [p.id, p]));
 
-console.log('[seed] WestPort.ai seed complete.');
-console.log('  companies:', db.prepare('SELECT COUNT(*) AS c FROM companies').get().c);
-console.log('  products :', db.prepare('SELECT COUNT(*) AS c FROM products').get().c);
-console.log('  users    :', db.prepare('SELECT COUNT(*) AS c FROM users').get().c);
+export function nowSec() {
+  return Math.floor(Date.now() / 1000);
+}

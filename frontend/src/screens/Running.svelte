@@ -68,7 +68,7 @@
 <div class="screen">
   <div class="app-shell">
     <div class="window-bar">
-      <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="bar-brand">WestPort.ai</div>
       <div class="window-title">Live agent triage</div>
       <button class="icon-button" aria-label="Stop analysis" on:click={abort}>
         <X size={17} />
@@ -85,7 +85,7 @@
           <h1>Three agents are turning the spec into launch decisions.</h1>
           <p>Chemicals, CE pathway, and carbon obligations are checked in parallel, then merged into one roadmap.</p>
         </div>
-        <div class="timer mono num">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}</div>
+        <div class="timer num">{Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}</div>
       </section>
 
       <section class="agent-board">
@@ -177,7 +177,7 @@
 
   .eyebrow {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
   }
 
@@ -197,10 +197,10 @@
   .timer {
     border: 1px solid var(--border);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.76);
-    padding: 8px 13px;
-    color: var(--accent);
-    font-weight: 760;
+    background: var(--bg-solid);
+    padding: 8px 14px;
+    color: var(--accent-on);
+    font-weight: 700;
   }
 
   .agent-board {
@@ -216,7 +216,7 @@
     gap: 9px;
     padding: 13px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   .error-box {

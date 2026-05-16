@@ -1,57 +1,42 @@
 // FILE: backend/routes/products.js
+// Stateless products. The sample library is static; user products are not
+// persisted (the analysis flow passes the product snapshot inline).
 import express from 'express';
 import { randomUUID } from 'node:crypto';
-import db, { nowSec } from '../db.js';
+import { SAMPLE_PRODUCTS, SAMPLE_BY_ID } from '../data/seed.js';
 
 const router = express.Router();
 
-const listForCompanyStmt = db.prepare(
-  'SELECT id, name, category, target_country, created_at FROM products WHERE company_id = ? ORDER BY created_at DESC'
-);
-const getStmt = db.prepare('SELECT * FROM products WHERE id = ? AND company_id = ?');
-const listSamplesStmt = db.prepare(
-  "SELECT id, name, category, target_country, spec FROM products WHERE company_id = 'demo' ORDER BY created_at ASC"
-);
-const insertStmt = db.prepare(
-  'INSERT INTO products (id, company_id, name, category, spec, target_country, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-);
-
-router.get('/', (req, res) => {
-  return res.json({ ok: true, data: listForCompanyStmt.all(req.companyId) });
+// No persistence -> a company has no saved products of its own.
+router.get('/', (_req, res) => {
+  return res.json({ ok: true, data: [] });
 });
 
 router.get('/samples', (_req, res) => {
-  const rows = listSamplesStmt.all().map((r) => ({
-    id: r.id,
-    name: r.name,
-    category: r.category,
-    target_country: r.target_country,
-    spec: JSON.parse(r.spec),
+  const rows = SAMPLE_PRODUCTS.map((p) => ({
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    target_country: p.target_country,
+    spec: p.spec,
   }));
   return res.json({ ok: true, data: rows });
 });
 
 router.get('/:id', (req, res) => {
-  const row = getStmt.get(req.params.id, req.companyId) || getStmt.get(req.params.id, 'demo');
+  const row = SAMPLE_BY_ID.get(req.params.id);
   if (!row) return res.status(404).json({ ok: false, error: 'NOT_FOUND' });
-  return res.json({ ok: true, data: { ...row, spec: JSON.parse(row.spec) } });
+  return res.json({ ok: true, data: { ...row, spec: row.spec } });
 });
 
+// Accepted for API compatibility but not stored: the caller should send the
+// product snapshot directly to POST /analyses.
 router.post('/', (req, res) => {
   const b = req.body || {};
   if (!b.name || !b.category) {
     return res.status(400).json({ ok: false, error: 'INVALID_PARAMS', message: 'name and category required' });
   }
   const id = `prd_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
-  insertStmt.run(
-    id,
-    req.companyId,
-    b.name,
-    b.category,
-    JSON.stringify(b.spec ?? {}),
-    b.target_country ?? 'EU',
-    nowSec()
-  );
   return res.json({ ok: true, data: { id } });
 });
 

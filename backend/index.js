@@ -3,7 +3,6 @@ import express from 'express';
 import cors from 'cors';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import './db.js';
 import { authMiddleware } from './middleware/auth.js';
 import { globalLimiter } from './middleware/rateLimit.js';
 import { CONFIG } from '../config.js';
@@ -85,14 +84,19 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-const port = Number(CONFIG.server.port) || 3000;
-app.listen(port, () => {
-  console.log(`[westport] API listening on :${port}`);
-  console.log(`  env=${CONFIG.env} provider=${CONFIG.llm.provider} mock=${CONFIG.llm.mock}`);
-  console.log(`  regulations=${regulationCount()} chunks=${chunkCount()}`);
-  if (CONFIG.llm.mock) {
-    console.log('  ⚠ LLM_MOCK enabled — agents will return canned responses.');
-  }
-});
+// On Vercel the app is imported as a serverless handler (see api/index.js) and
+// must NOT bind a port — Vercel manages the HTTP lifecycle. Only listen when
+// running as a standalone process (local dev, `pnpm start`, tests).
+if (!process.env.VERCEL) {
+  const port = Number(CONFIG.server.port) || 3000;
+  app.listen(port, () => {
+    console.log(`[westport] API listening on :${port}`);
+    console.log(`  env=${CONFIG.env} provider=${CONFIG.llm.provider} mock=${CONFIG.llm.mock}`);
+    console.log(`  regulations=${regulationCount()} chunks=${chunkCount()}`);
+    if (CONFIG.llm.mock) {
+      console.log('  ⚠ LLM_MOCK enabled — agents will return canned responses.');
+    }
+  });
+}
 
 export default app;

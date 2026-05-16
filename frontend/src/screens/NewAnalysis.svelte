@@ -51,7 +51,7 @@
 <div class="screen">
   <div class="app-shell">
     <div class="window-bar">
-      <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="bar-brand">WestPort.ai</div>
       <div class="window-title">New EU readiness scan</div>
       <button class="icon-button" aria-label="Back to cockpit" on:click={() => screen.set('landing')}>
         <ArrowLeft size={17} />
@@ -60,7 +60,6 @@
 
     <main class="intake">
       <aside class="intake-rail">
-        <div class="rail-icon"><BatteryCharging size={24} /></div>
         <h1>Product evidence intake</h1>
         <p>
           Add enough detail for the agents to classify the product, map obligations, and find the
@@ -84,8 +83,8 @@
           </div>
 
           <label class="field wide">
-            <span>Product name</span>
-            <input type="text" bind:value={form.name} placeholder="BL-200 NMC811 prismatic battery pack" maxlength="90" />
+            <span>Product name <span class="req" aria-hidden="true">*</span></span>
+            <input type="text" bind:value={form.name} placeholder="BL-200 NMC811 prismatic battery pack" maxlength="90" required aria-required="true" />
           </label>
 
           <label class="field">
@@ -154,7 +153,7 @@
         </section>
 
         {#if err}
-          <div class="error wide">{err}</div>
+          <div class="error wide" role="alert">{err}</div>
         {/if}
 
         <div class="sticky-action wide">
@@ -184,21 +183,17 @@
     padding: 12px 4px;
   }
 
-  .rail-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    display: grid;
-    place-items: center;
-    color: white;
-    background: linear-gradient(180deg, #1d1d1f, #3a3a40);
+  .field span.req {
+    color: var(--danger);
+    font-weight: 700;
   }
 
   h1 {
-    margin: 22px 0 0;
-    font-size: 38px;
-    line-height: 1.04;
-    font-weight: 790;
+    margin: 0;
+    font-size: 2.375rem;
+    line-height: 1.06;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 
   .intake-rail p {
@@ -217,13 +212,13 @@
     border-top: 1px solid var(--border);
     padding-top: 10px;
     color: var(--text);
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   .rail-facts span {
     display: block;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     margin-bottom: 3px;
   }
@@ -249,13 +244,13 @@
 
   .section-title h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 
   .section-title p {
     margin: 3px 0 0;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   .wide {
@@ -268,7 +263,7 @@
     background: var(--red-soft);
     color: var(--red);
     padding: 12px 14px;
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   .sticky-action {
@@ -280,10 +275,9 @@
     gap: 14px;
     border: 1px solid var(--border-strong);
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.86);
-    backdrop-filter: blur(22px);
-    box-shadow: var(--shadow-soft);
-    padding: 12px;
+    background: var(--panel-strong);
+    box-shadow: 0 -2px 18px rgba(20, 26, 42, 0.08);
+    padding: 14px;
   }
 
   .sticky-action strong,
@@ -294,7 +288,7 @@
   .sticky-action span {
     margin-top: 2px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   @media (max-width: 900px) {

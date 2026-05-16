@@ -7,11 +7,29 @@
 
 <style>
   .pill {
-    display: inline-block; padding: 2px 8px; border-radius: 999px;
-    font-size: 10.5px; font-weight: 700; letter-spacing: 0;
+    display: inline-block; padding: 3px 9px; border-radius: 999px;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em;
     border: 1px solid transparent;
   }
-  .sev-high   { background: rgba(255, 133, 133, 0.12); color: var(--high); border-color: rgba(255, 133, 133, 0.30); }
-  .sev-medium { background: rgba(255, 195, 113, 0.12); color: var(--medium); border-color: rgba(255, 195, 113, 0.32); }
-  .sev-low    { background: rgba(132, 181, 255, 0.12); color: var(--low); border-color: rgba(132, 181, 255, 0.30); }
+  .sev-high {
+    color: var(--high);
+    background: #f8e6e6;
+    background: color-mix(in srgb, var(--high) 12%, white);
+    border-color: #edc1c0;
+    border-color: color-mix(in srgb, var(--high) 30%, white);
+  }
+  .sev-medium {
+    color: var(--medium);
+    background: #f4ebe0;
+    background: color-mix(in srgb, var(--medium) 12%, white);
+    border-color: #e4ccb3;
+    border-color: color-mix(in srgb, var(--medium) 30%, white);
+  }
+  .sev-low {
+    color: var(--low);
+    background: #ebeafa;
+    background: color-mix(in srgb, var(--low) 12%, white);
+    border-color: #cccbf3;
+    border-color: color-mix(in srgb, var(--low) 30%, white);
+  }
 </style>
