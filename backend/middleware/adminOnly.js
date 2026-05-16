@@ -3,11 +3,11 @@ import db from '../db.js';
 
 const getRoleStmt = db.prepare('SELECT role FROM users WHERE id = ?');
 
-export function adminOnly(req, res, next) {
+export async function adminOnly(req, res, next) {
   if (!req.userId) {
     return res.status(401).json({ ok: false, error: 'AUTH_REQUIRED', message: 'Login required' });
   }
-  const row = getRoleStmt.get(req.userId);
+  const row = await getRoleStmt.get(req.userId);
   if (!row || row.role !== 'admin') {
     return res.status(403).json({ ok: false, error: 'FORBIDDEN', message: 'Admin role required' });
   }

@@ -77,8 +77,8 @@ const ORCH_TOOL = {
   },
 };
 
-function recordAgentRun({ analysisId, agent, status, output, error, usage, costUsd, startedAt }) {
-  db.prepare(
+async function recordAgentRun({ analysisId, agent, status, output, error, usage, costUsd, startedAt }) {
+  await db.prepare(
     'INSERT INTO agent_runs (analysis_id, agent, status, input_tokens, output_tokens, cost_usd, output, error, started_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(
     analysisId,
@@ -95,7 +95,7 @@ function recordAgentRun({ analysisId, agent, status, output, error, usage, costU
 }
 
 export async function runAnalysis({ analysisId, productSnapshot, emit }) {
-  db.prepare("UPDATE analyses SET status = 'running' WHERE id = ?").run(analysisId);
+  await db.prepare("UPDATE analyses SET status = 'running' WHERE id = ?").run(analysisId);
   emit('status', { status: 'running', analysisId });
 
   // Three specialists in parallel.
@@ -118,7 +118,7 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
       } else {
         result = await runAgent(agent, productSnapshot);
       }
-      recordAgentRun({
+      await recordAgentRun({
         analysisId,
         agent,
         status: 'complete',
@@ -131,7 +131,7 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
       emit('agent_done', { agent, findings: result.parsed.findings, costUsd: result.costUsd });
       return { agent, ...result.parsed };
     } catch (err) {
-      recordAgentRun({
+      await recordAgentRun({
         analysisId,
         agent,
         status: 'failed',
@@ -184,7 +184,7 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
       userPrompt,
       tool: ORCH_TOOL,
     });
-    recordAgentRun({
+    await recordAgentRun({
       analysisId,
       agent: 'orchestrator',
       status: 'complete',
@@ -195,7 +195,7 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
       startedAt: orchStarted,
     });
   } catch (err) {
-    recordAgentRun({
+    await recordAgentRun({
       analysisId,
       agent: 'orchestrator',
       status: 'failed',
@@ -205,7 +205,7 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
       costUsd: null,
       startedAt: orchStarted,
     });
-    db.prepare("UPDATE analyses SET status = 'failed', error = ?, finished_at = ? WHERE id = ?")
+    await db.prepare("UPDATE analyses SET status = 'failed', error = ?, finished_at = ? WHERE id = ?")
       .run(err.message, nowSec(), analysisId);
     emit('failed', { error: err.message });
     return { ok: false, error: err.message };
@@ -213,7 +213,7 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
 
   const report = orch.parsed;
   // Persist on analyses.
-  db.prepare(
+  await db.prepare(
     `UPDATE analyses SET status = 'complete', compliance_score = ?, total_cost_eur = ?, weeks_to_launch = ?,
        summary = ?, report = ?, finished_at = ? WHERE id = ?`
   ).run(
@@ -238,9 +238,9 @@ export async function runAnalysis({ analysisId, productSnapshot, emit }) {
   return { ok: true, report };
 }
 
-export function createAnalysis({ companyId, productSnapshot, productId }) {
+export async function createAnalysis({ companyId, productSnapshot, productId }) {
   const id = `an_${randomUUID().replace(/-/g, '')}`;
-  db.prepare(
+  await db.prepare(
     "INSERT INTO analyses (id, company_id, product_id, product_snapshot, status, started_at) VALUES (?, ?, ?, ?, 'queued', ?)"
   ).run(id, companyId, productId ?? null, JSON.stringify(productSnapshot), nowSec());
   return id;

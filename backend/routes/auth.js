@@ -14,20 +14,20 @@ const insertUserStmt = db.prepare(
 const findCompanyStmt = db.prepare('SELECT * FROM companies WHERE id = ?');
 const firstCompanyStmt = db.prepare('SELECT id FROM companies ORDER BY created_at ASC LIMIT 1');
 
-router.post('/login', authLimiter, (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   // Demo-grade auth: any unauthenticated visitor gets a guest analyst seat in
   // the first seeded company. Production would do SSO + RBAC.
   const { email, companyId } = req.body || {};
-  let targetCompanyId = companyId || firstCompanyStmt.get()?.id;
+  let targetCompanyId = companyId || (await firstCompanyStmt.get())?.id;
   if (!targetCompanyId) {
     return res.status(500).json({ ok: false, error: 'NO_COMPANY', message: 'No companies seeded' });
   }
-  if (!findCompanyStmt.get(targetCompanyId)) {
+  if (!(await findCompanyStmt.get(targetCompanyId))) {
     return res.status(404).json({ ok: false, error: 'NOT_FOUND', message: 'Company not found' });
   }
 
   const id = `usr_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
-  insertUserStmt.run(id, targetCompanyId, email ?? null, email ? email.split('@')[0] : 'Guest analyst', 'analyst', nowSec());
+  await insertUserStmt.run(id, targetCompanyId, email ?? null, email ? email.split('@')[0] : 'Guest analyst', 'analyst', nowSec());
 
   const token = signToken({ userId: id, companyId: targetCompanyId, role: 'analyst' });
   return res.json({
@@ -36,10 +36,10 @@ router.post('/login', authLimiter, (req, res) => {
   });
 });
 
-router.get('/me', authMiddleware, (req, res) => {
-  const user = findUserStmt.get(req.userId);
+router.get('/me', authMiddleware, async (req, res) => {
+  const user = await findUserStmt.get(req.userId);
   if (!user) return res.status(404).json({ ok: false, error: 'NOT_FOUND' });
-  const company = findCompanyStmt.get(user.company_id);
+  const company = await findCompanyStmt.get(user.company_id);
   return res.json({
     ok: true,
     data: {

@@ -103,6 +103,48 @@ deterministic JSON output everywhere - judges can run the demo on
 **DeepSeek-Chat or Qwen-Max** without changing a line of agent code, and the
 status pill on the landing page shows the live provider.
 
+## Deploy to Vercel
+
+The backend runs as a single Vercel serverless function (`api/index.js` wraps
+the Express app); the Svelte frontend is built to `public/` and served as
+static assets. SQLite is replaced by **Turso** (libSQL) because Vercel's
+filesystem is ephemeral — a local `.sqlite` file would not persist.
+
+```bash
+# 1. Create a Turso database and grab credentials
+turso db create westport
+turso db show westport --url            # -> TURSO_DATABASE_URL
+turso db tokens create westport         # -> TURSO_AUTH_TOKEN
+
+# 2. Push the schema once (idempotent: all CREATE ... IF NOT EXISTS)
+TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... pnpm db:push
+
+# 3. Seed demo company + sample products
+TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... pnpm seed
+
+# 4. Deploy
+vercel --prod
+```
+
+Set these in **Vercel → Project → Settings → Environment Variables**:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `TURSO_DATABASE_URL` | yes | `libsql://...` from `turso db show` |
+| `TURSO_AUTH_TOKEN` | yes | from `turso db tokens create` |
+| `JWT_SECRET` | yes | app refuses to boot in prod with the dev default |
+| `ENV` | yes | set to `prod` |
+| one LLM key | optional | `ANTHROPIC_API_KEY` / `DEEPSEEK_API_KEY` / etc. Omit + set `LLM_MOCK=1` for a key-free demo |
+
+Notes:
+
+- `vercel.json` sets `maxDuration: 300` for the analysis function. A full
+  multi-agent run can take 1–3 min, so this requires a **Vercel Pro** plan
+  with Fluid Compute. On Hobby (60 s cap) long live analyses are truncated —
+  run with `LLM_MOCK=1` for a reliable demo there.
+- No Turso env locally → the app falls back to the bundled file DB and
+  auto-migrates on boot, so `pnpm start` works exactly as before.
+
 ## Project structure
 
 ```

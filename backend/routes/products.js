@@ -16,12 +16,12 @@ const insertStmt = db.prepare(
   'INSERT INTO products (id, company_id, name, category, spec, target_country, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
 );
 
-router.get('/', (req, res) => {
-  return res.json({ ok: true, data: listForCompanyStmt.all(req.companyId) });
+router.get('/', async (req, res) => {
+  return res.json({ ok: true, data: await listForCompanyStmt.all(req.companyId) });
 });
 
-router.get('/samples', (_req, res) => {
-  const rows = listSamplesStmt.all().map((r) => ({
+router.get('/samples', async (_req, res) => {
+  const rows = (await listSamplesStmt.all()).map((r) => ({
     id: r.id,
     name: r.name,
     category: r.category,
@@ -31,19 +31,21 @@ router.get('/samples', (_req, res) => {
   return res.json({ ok: true, data: rows });
 });
 
-router.get('/:id', (req, res) => {
-  const row = getStmt.get(req.params.id, req.companyId) || getStmt.get(req.params.id, 'demo');
+router.get('/:id', async (req, res) => {
+  const row =
+    (await getStmt.get(req.params.id, req.companyId)) ||
+    (await getStmt.get(req.params.id, 'demo'));
   if (!row) return res.status(404).json({ ok: false, error: 'NOT_FOUND' });
   return res.json({ ok: true, data: { ...row, spec: JSON.parse(row.spec) } });
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const b = req.body || {};
   if (!b.name || !b.category) {
     return res.status(400).json({ ok: false, error: 'INVALID_PARAMS', message: 'name and category required' });
   }
   const id = `prd_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
-  insertStmt.run(
+  await insertStmt.run(
     id,
     req.companyId,
     b.name,

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "public",
+  "framework": null,
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 300,
+      "includeFiles": "backend/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/health", "destination": "/api" },
+    { "source": "/auth", "destination": "/api" },
+    { "source": "/auth/:path*", "destination": "/api" },
+    { "source": "/companies", "destination": "/api" },
+    { "source": "/companies/:path*", "destination": "/api" },
+    { "source": "/products", "destination": "/api" },
+    { "source": "/products/:path*", "destination": "/api" },
+    { "source": "/analyses", "destination": "/api" },
+    { "source": "/analyses/:path*", "destination": "/api" }
+  ]
+}

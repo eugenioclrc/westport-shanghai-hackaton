@@ -19,12 +19,12 @@ const claimQueuedAnalysisStmt = db.prepare(
   "UPDATE analyses SET status = 'running' WHERE id = ? AND company_id = ? AND status = 'queued'"
 );
 
-router.post('/', authMiddleware, analysisLimiter, (req, res) => {
+router.post('/', authMiddleware, analysisLimiter, async (req, res) => {
   const { product, productId } = req.body || {};
   if (!product || !product.name || !product.category) {
     return res.status(400).json({ ok: false, error: 'INVALID_PARAMS', message: 'product { name, category, ... } required' });
   }
-  const id = createAnalysis({
+  const id = await createAnalysis({
     companyId: req.companyId,
     productId: productId ?? null,
     productSnapshot: product,
@@ -35,7 +35,7 @@ router.post('/', authMiddleware, analysisLimiter, (req, res) => {
 // EventSource cannot set Authorization headers, so the stream endpoint accepts
 // the JWT as a query-string param. The token is short-lived and scoped to a
 // company; acceptable for the demo.
-router.get('/:id/stream', (req, res) => {
+router.get('/:id/stream', async (req, res) => {
   const token = String(req.query.token || '');
   let companyId;
   try {
@@ -45,7 +45,7 @@ router.get('/:id/stream', (req, res) => {
     return res.status(401).end();
   }
 
-  const analysis = getAnalysisStmt.get(req.params.id, companyId);
+  const analysis = await getAnalysisStmt.get(req.params.id, companyId);
   if (!analysis) return res.status(404).end();
 
   res.set({
@@ -89,7 +89,7 @@ router.get('/:id/stream', (req, res) => {
 
   // Exactly one stream request claims and executes a queued analysis.
   // Followers attach to the stream and wait for terminal status.
-  const claimed = claimQueuedAnalysisStmt.run(req.params.id, companyId).changes === 1;
+  const claimed = (await claimQueuedAnalysisStmt.run(req.params.id, companyId)).changes === 1;
   if (claimed) {
     const productSnapshot = JSON.parse(analysis.product_snapshot);
     runAnalysis({ analysisId: analysis.id, productSnapshot, emit })
@@ -106,35 +106,44 @@ router.get('/:id/stream', (req, res) => {
   }
 
   emit('status', { status: 'running', analysisId: analysis.id });
-  const followTimer = setInterval(() => {
-    const latest = getAnalysisStmt.get(req.params.id, companyId);
-    if (!latest) {
-      emit('failed', { error: 'NOT_FOUND' });
-      clearInterval(followTimer);
-      clearInterval(keepalive);
-      return res.end();
-    }
-    if (latest.status === 'complete') {
-      clearInterval(followTimer);
-      clearInterval(keepalive);
-      return sendComplete(latest);
-    }
-    if (latest.status === 'failed') {
-      emit('failed', { error: latest.error || 'unknown' });
-      clearInterval(followTimer);
-      clearInterval(keepalive);
-      return res.end();
+  // `polling` guards against overlapping ticks: a remote libSQL round-trip can
+  // exceed the 1 s interval, and we must not pile up concurrent queries.
+  let polling = false;
+  const followTimer = setInterval(async () => {
+    if (polling) return;
+    polling = true;
+    try {
+      const latest = await getAnalysisStmt.get(req.params.id, companyId);
+      if (!latest) {
+        emit('failed', { error: 'NOT_FOUND' });
+        clearInterval(followTimer);
+        clearInterval(keepalive);
+        return res.end();
+      }
+      if (latest.status === 'complete') {
+        clearInterval(followTimer);
+        clearInterval(keepalive);
+        return sendComplete(latest);
+      }
+      if (latest.status === 'failed') {
+        emit('failed', { error: latest.error || 'unknown' });
+        clearInterval(followTimer);
+        clearInterval(keepalive);
+        return res.end();
+      }
+    } finally {
+      polling = false;
     }
   }, 1000);
   req.on('close', () => clearInterval(followTimer));
 });
 
-router.get('/', authMiddleware, (req, res) => {
-  return res.json({ ok: true, data: listForCompanyStmt.all(req.companyId) });
+router.get('/', authMiddleware, async (req, res) => {
+  return res.json({ ok: true, data: await listForCompanyStmt.all(req.companyId) });
 });
 
-router.get('/:id', authMiddleware, (req, res) => {
-  const row = getAnalysisStmt.get(req.params.id, req.companyId);
+router.get('/:id', authMiddleware, async (req, res) => {
+  const row = await getAnalysisStmt.get(req.params.id, req.companyId);
   if (!row) return res.status(404).json({ ok: false, error: 'NOT_FOUND' });
   return res.json({
     ok: true,

@@ -2,7 +2,10 @@
 // Idempotent seed: one demo company (BoltLeap Energy, fictional Series B
 // battery cell maker), an admin user, and two sample products judges can pick
 // from on the landing page (cathode-NMC EV battery cell + humanoid robot).
-import db, { nowSec } from './db.js';
+//
+// Run against local dev (no Turso env) or remote Turso (TURSO_* env set).
+// `migrate()` is called first so seeding a fresh remote DB needs no extra step.
+import db, { nowSec, migrate } from './db.js';
 
 const upsertCompanyStmt = db.prepare(
   `INSERT INTO companies (id, name, sector, hq_city, created_at)
@@ -19,15 +22,6 @@ const upsertProductStmt = db.prepare(
    VALUES (?, ?, ?, ?, ?, ?, ?)
    ON CONFLICT(id) DO UPDATE SET spec = excluded.spec`
 );
-
-const now = nowSec();
-
-// Demo tenant: companies the user "is" when logging in as guest.
-upsertCompanyStmt.run('boltleap', 'BoltLeap Energy', 'battery', 'Hefei, China', now);
-upsertCompanyStmt.run('demo', 'Demo Sample Library', 'consumer', 'Shanghai, China', now);
-upsertCompanyStmt.run('skywalker', 'Skywalker Robotics', 'robotics', 'Shenzhen, China', now);
-
-upsertUserStmt.run('admin_001', 'boltleap', 'admin@boltleap.cn', 'Admin', 'admin', now);
 
 const products = [
   {
@@ -70,11 +64,30 @@ const products = [
   },
 ];
 
-for (const p of products) {
-  upsertProductStmt.run(p.id, p.company_id, p.name, p.category, JSON.stringify(p.spec), p.target_country, now);
+async function seed() {
+  await migrate();
+  const now = nowSec();
+
+  // Demo tenant: companies the user "is" when logging in as guest.
+  await upsertCompanyStmt.run('boltleap', 'BoltLeap Energy', 'battery', 'Hefei, China', now);
+  await upsertCompanyStmt.run('demo', 'Demo Sample Library', 'consumer', 'Shanghai, China', now);
+  await upsertCompanyStmt.run('skywalker', 'Skywalker Robotics', 'robotics', 'Shenzhen, China', now);
+
+  await upsertUserStmt.run('admin_001', 'boltleap', 'admin@boltleap.cn', 'Admin', 'admin', now);
+
+  for (const p of products) {
+    await upsertProductStmt.run(
+      p.id, p.company_id, p.name, p.category, JSON.stringify(p.spec), p.target_country, now
+    );
+  }
+
+  console.log('[seed] WestPort.ai seed complete.');
+  console.log('  companies:', (await db.prepare('SELECT COUNT(*) AS c FROM companies').get()).c);
+  console.log('  products :', (await db.prepare('SELECT COUNT(*) AS c FROM products').get()).c);
+  console.log('  users    :', (await db.prepare('SELECT COUNT(*) AS c FROM users').get()).c);
 }
 
-console.log('[seed] WestPort.ai seed complete.');
-console.log('  companies:', db.prepare('SELECT COUNT(*) AS c FROM companies').get().c);
-console.log('  products :', db.prepare('SELECT COUNT(*) AS c FROM products').get().c);
-console.log('  users    :', db.prepare('SELECT COUNT(*) AS c FROM users').get().c);
+seed().catch((err) => {
+  console.error('[seed] failed:', err);
+  process.exit(1);
+});
